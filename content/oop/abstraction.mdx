@@ -1,64 +1,109 @@
 ## Concept
 
-Expose stable contracts while hiding implementation details. Keep the implementation minimal, but the boundaries explicit.
+**Abstraction** is the principle of hiding the complex reality while exposing only the necessary parts. It allows the user to interact with a system using a simple interface, without needing to understand the intricate details of how it works underneath.
+
+Think of a car: you know how to use the steering wheel and pedals (the interface), but you don't need to know how the combustion engine and transmission work (the implementation).
 
 ## When to use
 
-- When you want a clear separation of concerns in object interactions.
-- When interview discussions require trade-offs, not just syntax.
-- When you need an example that maps quickly to production design decisions.
+- When you have complex logic that clients don't need to be aware of.
+- When you want to separate *what* an object does from *how* it does it.
+- When you need to provide a unified interface for different concrete implementations.
 
 ## Diagram
 
 <MermaidDiagram chart={`classDiagram
-  class AbstractionContext {
-    +execute(): void
+  class CoffeeMachine {
+    <<interface>>
+    +brewCoffee()
   }
-  class AbstractionImplementation {
-    +execute(): void
+  
+  class BasicCoffeeMachine {
+    -boilWater()
+    -grindBeans()
+    -pourCoffee()
+    +brewCoffee()
   }
-  AbstractionContext --> AbstractionImplementation`} />
+  
+  class PremiumEspressoMachine {
+    -heatPressurizedWater()
+    -tampGrinds()
+    -extractEspresso()
+    +brewCoffee()
+  }
+  
+  CoffeeMachine <|.. BasicCoffeeMachine
+  CoffeeMachine <|.. PremiumEspressoMachine`} />
 
 ## Code
 
 <CodeBlock
-  typescript={`interface Abstraction {
-  execute(input: string): string;
+  typescript={`// The abstract interface exposed to the client
+interface CoffeeMachine {
+  brewCoffee(): string;
 }
 
-class AbstractionImpl implements Abstraction {
-  execute(input: string): string {
-    return input.trim();
+// Concrete implementation hiding complex internal steps
+class BasicCoffeeMachine implements CoffeeMachine {
+  private boilWater(): void { console.log("Boiling water..."); }
+  private grindBeans(): void { console.log("Grinding beans..."); }
+
+  public brewCoffee(): string {
+    this.boilWater();
+    this.grindBeans();
+    return "Here is your regular coffee!";
   }
 }
 
-const demo: Abstraction = new AbstractionImpl();
-console.log(demo.execute('sample'));`}
-  java={`interface Abstraction {
-  String execute(String input);
+const machine: CoffeeMachine = new BasicCoffeeMachine();
+// The client only cares about brewing coffee
+console.log(machine.brewCoffee());`}
+  java={`interface CoffeeMachine {
+  String brewCoffee();
 }
 
-class AbstractionImpl implements Abstraction {
-  public String execute(String input) {
-    return input.trim();
+class BasicCoffeeMachine implements CoffeeMachine {
+  private void boilWater() { System.out.println("Boiling water..."); }
+  private void grindBeans() { System.out.println("Grinding beans..."); }
+
+  @Override
+  public String brewCoffee() {
+    boilWater();
+    grindBeans();
+    return "Here is your regular coffee!";
   }
 }
 
-Abstraction demo = new AbstractionImpl();
-System.out.println(demo.execute("sample"));`}
-  python={`class Abstraction:
-    def execute(self, input: str) -> str:
-        raise NotImplementedError
+public class Main {
+  public static void main(String[] args) {
+    CoffeeMachine machine = new BasicCoffeeMachine();
+    System.out.println(machine.brewCoffee());
+  }
+}`}
+  python={`from abc import ABC, abstractmethod
 
-class AbstractionImpl(Abstraction):
-    def execute(self, input: str) -> str:
-        return input.strip()
+class CoffeeMachine(ABC):
+    @abstractmethod
+    def brew_coffee(self) -> str:
+        pass
 
-demo: Abstraction = AbstractionImpl()
-print(demo.execute("sample"))`}
+class BasicCoffeeMachine(CoffeeMachine):
+    def _boil_water(self):
+        print("Boiling water...")
+        
+    def _grind_beans(self):
+        print("Grinding beans...")
+
+    def brew_coffee(self) -> str:
+        self._boil_water()
+        self._grind_beans()
+        return "Here is your regular coffee!"
+
+machine: CoffeeMachine = BasicCoffeeMachine()
+print(machine.brew_coffee())`}
 />
 
 ## Gotchas
 
-- Copying the pattern mechanically without checking the problem constraints.
-- Ignoring object responsibilities, which usually leads to god classes.
+- **Leaky Abstractions**: When internal details "leak" through the interface (e.g., exposing network errors in a generic logging repository).
+- **Premature Abstraction**: Creating interfaces and base classes for concepts that only have one implementation, leading to unnecessary complexity.

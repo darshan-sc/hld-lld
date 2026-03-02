@@ -1,64 +1,115 @@
 ## Concept
 
-Understand how classes model entities and objects hold runtime state. Keep the implementation minimal, but the boundaries explicit.
+**Classes** are blueprints or templates that define the structure and behavior (properties and methods) of a certain type of entity. 
+**Objects** are concrete, realized instances built from those blueprints, each with its own independent state.
+
+If a class is the blueprint for a house, the object is the actual physical house built at a specific address.
 
 ## When to use
 
-- When you want a clear separation of concerns in object interactions.
-- When interview discussions require trade-offs, not just syntax.
-- When you need an example that maps quickly to production design decisions.
+- At the foundation of any Object-Oriented system.
+- When you want to bundle data (attributes) and the functions that operate on that data (methods) into a single logical unit.
+- To create multiple distinct entities that share the same structure but hold different values.
 
 ## Diagram
 
 <MermaidDiagram chart={`classDiagram
-  class ClassesObjectsContext {
-    +execute(): void
+  class Document {
+    +String title
+    +String author
+    +int pageCount
+    +open()
+    +save()
+    +print()
   }
-  class ClassesObjectsImplementation {
-    +execute(): void
+  
+  note for Document "Blueprint (Class)"
+  
+  class Doc1_Instance {
+    title = "System Design"
+    author = "Alice"
+    pageCount = 42
   }
-  ClassesObjectsContext --> ClassesObjectsImplementation`} />
+  
+  class Doc2_Instance {
+    title = "Meeting Notes"
+    author = "Bob"
+    pageCount = 3
+  }
+  
+  Document ..> Doc1_Instance : Instantiates
+  Document ..> Doc2_Instance : Instantiates`} />
 
 ## Code
 
 <CodeBlock
-  typescript={`interface ClassesObjects {
-  execute(input: string): string;
-}
+  typescript={`// Class definition (The Blueprint)
+class BankAccount {
+  ownerName: string;
+  balance: number;
 
-class ClassesObjectsImpl implements ClassesObjects {
-  execute(input: string): string {
-    return input.trim();
+  constructor(ownerName: string, initialBalance: number) {
+    this.ownerName = ownerName;
+    this.balance = initialBalance;
+  }
+
+  deposit(amount: number): void {
+    this.balance += amount;
   }
 }
 
-const demo: ClassesObjects = new ClassesObjectsImpl();
-console.log(demo.execute('sample'));`}
-  java={`interface ClassesObjects {
-  String execute(String input);
-}
+// Object instantiation (The Concrete Instances)
+const aliceAccount = new BankAccount("Alice", 1000);
+const bobAccount = new BankAccount("Bob", 500);
 
-class ClassesObjectsImpl implements ClassesObjects {
-  public String execute(String input) {
-    return input.trim();
+aliceAccount.deposit(200);
+console.log(aliceAccount.balance); // 1200
+console.log(bobAccount.balance);   // 500 (Independent state)`}
+  java={`// Class definition
+class BankAccount {
+  String ownerName;
+  double balance;
+
+  public BankAccount(String ownerName, double initialBalance) {
+    this.ownerName = ownerName;
+    this.balance = initialBalance;
+  }
+
+  public void deposit(double amount) {
+    this.balance += amount;
   }
 }
 
-ClassesObjects demo = new ClassesObjectsImpl();
-System.out.println(demo.execute("sample"));`}
-  python={`class ClassesObjects:
-    def execute(self, input: str) -> str:
-        raise NotImplementedError
+public class Main {
+  public static void main(String[] args) {
+    // Object instantiation
+    BankAccount aliceAccount = new BankAccount("Alice", 1000);
+    BankAccount bobAccount = new BankAccount("Bob", 500);
 
-class ClassesObjectsImpl(ClassesObjects):
-    def execute(self, input: str) -> str:
-        return input.strip()
+    aliceAccount.deposit(200);
+    System.out.println(aliceAccount.balance); // 1200
+    System.out.println(bobAccount.balance);   // 500
+  }
+}`}
+  python={`# Class definition
+class BankAccount:
+    def __init__(self, owner_name: str, initial_balance: float):
+        self.owner_name = owner_name
+        self.balance = initial_balance
 
-demo: ClassesObjects = ClassesObjectsImpl()
-print(demo.execute("sample"))`}
+    def deposit(self, amount: float) -> None:
+        self.balance += amount
+
+# Object instantiation
+alice_account = BankAccount("Alice", 1000)
+bob_account = BankAccount("Bob", 500)
+
+alice_account.deposit(200)
+print(alice_account.balance) # 1200
+print(bob_account.balance)   # 500 (Independent state)`}
 />
 
 ## Gotchas
 
-- Copying the pattern mechanically without checking the problem constraints.
-- Ignoring object responsibilities, which usually leads to god classes.
+- **God Classes**: Creating a massive class that does everything instead of breaking it down under the Single Responsibility Principle.
+- **Data Classes**: Creating classes that only contain getters/setters and no real behavior (an anti-pattern known as Anemic Domain Model).

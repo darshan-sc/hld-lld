@@ -1,64 +1,114 @@
 ## Concept
 
-Protect object state behind methods so invariants stay intact. Keep the implementation minimal, but the boundaries explicit.
+**Encapsulation** is the bundling of data (attributes) and the methods that operate on that data into a single unit (a class). Crucially, it involves restricting direct access to some of the object's components to prevent accidental interference and misuse.
+
+This is usually achieved using access modifiers (`private`, `protected`, `public`) and exposing controlled access via getters and setters.
 
 ## When to use
 
-- When you want a clear separation of concerns in object interactions.
-- When interview discussions require trade-offs, not just syntax.
-- When you need an example that maps quickly to production design decisions.
+- To protect an object's internal state from unauthorized or unintended modifications.
+- When an attribute needs validation before it can be updated.
+- To allow the internal implementation to change without affecting any external code relying on it.
 
 ## Diagram
 
 <MermaidDiagram chart={`classDiagram
-  class EncapsulationContext {
-    +execute(): void
+  class Employee {
+    -String name    %% private
+    -int salary     %% private
+    
+    +getName() String
+    +getSalary() int
+    +setSalary(int newSalary) void
+    -validateSalary(int s) boolean
   }
-  class EncapsulationImplementation {
-    +execute(): void
-  }
-  EncapsulationContext --> EncapsulationImplementation`} />
+  
+  note for Employee "Data is protected behind methods"`} />
 
 ## Code
 
 <CodeBlock
-  typescript={`interface Encapsulation {
-  execute(input: string): string;
-}
+  typescript={`class Employee {
+  private name: string;
+  private salary: number;
 
-class EncapsulationImpl implements Encapsulation {
-  execute(input: string): string {
-    return input.trim();
+  constructor(name: string, salary: number) {
+    this.name = name;
+    this.salary = salary;
+  }
+
+  // Controlled access via getter
+  public getSalary(): number {
+    return this.salary;
+  }
+
+  // Controlled mutation via setter with validation
+  public setSalary(newSalary: number): void {
+    if (newSalary < 0) {
+      throw new Error("Salary cannot be negative");
+    }
+    this.salary = newSalary;
   }
 }
 
-const demo: Encapsulation = new EncapsulationImpl();
-console.log(demo.execute('sample'));`}
-  java={`interface Encapsulation {
-  String execute(String input);
-}
+const emp = new Employee("Alice", 50000);
+// emp.salary = -10; // Error: Property 'salary' is private
+emp.setSalary(60000); // OK
+console.log(emp.getSalary());`}
+  java={`class Employee {
+  private String name;
+  private int salary;
 
-class EncapsulationImpl implements Encapsulation {
-  public String execute(String input) {
-    return input.trim();
+  public Employee(String name, int salary) {
+    this.name = name;
+    this.salary = salary;
+  }
+
+  // Getter
+  public int getSalary() {
+    return this.salary;
+  }
+
+  // Setter with validation
+  public void setSalary(int newSalary) {
+    if (newSalary < 0) {
+        throw new IllegalArgumentException("Salary cannot be negative");
+    }
+    this.salary = newSalary;
   }
 }
 
-Encapsulation demo = new EncapsulationImpl();
-System.out.println(demo.execute("sample"));`}
-  python={`class Encapsulation:
-    def execute(self, input: str) -> str:
-        raise NotImplementedError
+public class Main {
+  public static void main(String[] args) {
+    Employee emp = new Employee("Alice", 50000);
+    // emp.salary = -10; // Compiler Error!
+    emp.setSalary(60000);
+    System.out.println(emp.getSalary());
+  }
+}`}
+  python={`class Employee:
+    def __init__(self, name: str, salary: int):
+        self._name = name     # protected by convention
+        self.__salary = salary # private by name mangling
 
-class EncapsulationImpl(Encapsulation):
-    def execute(self, input: str) -> str:
-        return input.strip()
+    # Controlled access via property getter
+    @property
+    def salary(self) -> int:
+        return self.__salary
 
-demo: Encapsulation = EncapsulationImpl()
-print(demo.execute("sample"))`}
+    # Controlled mutation via property setter
+    @salary.setter
+    def salary(self, new_salary: int):
+        if new_salary < 0:
+            raise ValueError("Salary cannot be negative")
+        self.__salary = new_salary
+
+emp = Employee("Alice", 50000)
+# emp.__salary = -10 # Error: AttributeError
+emp.salary = 60000   # Uses the setter
+print(emp.salary)`}
 />
 
 ## Gotchas
 
-- Copying the pattern mechanically without checking the problem constraints.
-- Ignoring object responsibilities, which usually leads to god classes.
+- **Blindly creating getters/setters for everything**: This essentially breaks encapsulation because you are exposing the entire internal state anyway. Only create accessors for what absolutely needs to be public.

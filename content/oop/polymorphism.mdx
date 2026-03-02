@@ -1,64 +1,132 @@
 ## Concept
 
-Call one interface and let runtime choose the concrete behavior. Keep the implementation minimal, but the boundaries explicit.
+**Polymorphism** (from Greek, meaning "many forms") allows objects of different classes to be treated as objects of a common superclass. Furthermore, it allows the exact same method signature to behave differently depending on the specific subclass invoking it.
+
+This is primarily achieved through **Method Overriding** (runtime polymorphism, usually via interfaces or inheritence) and **Method Overloading** (compile-time polymorphism).
 
 ## When to use
 
-- When you want a clear separation of concerns in object interactions.
-- When interview discussions require trade-offs, not just syntax.
-- When you need an example that maps quickly to production design decisions.
+- When you have a collection of different objects that share a common interface or base class, and you want to process them uniformly (e.g., drawing all `Shape` objects, paying all `Employee` types).
+- To adhere to the Open/Closed Principle: you can add new subclasses without modifying the code that consumes the base abstraction.
 
 ## Diagram
 
 <MermaidDiagram chart={`classDiagram
-  class PolymorphismContext {
-    +execute(): void
+  class Shape {
+    <<abstract>>
+    +calculateArea() double
   }
-  class PolymorphismImplementation {
-    +execute(): void
+  
+  class Circle {
+    -double radius
+    +calculateArea() double
   }
-  PolymorphismContext --> PolymorphismImplementation`} />
+  
+  class Rectangle {
+    -double width
+    -double height
+    +calculateArea() double
+  }
+  
+  Shape <|-- Circle : "Overrides calculateArea"
+  Shape <|-- Rectangle : "Overrides calculateArea"
+  
+  note for Shape "Polymorphic Call" `} />
 
 ## Code
 
 <CodeBlock
-  typescript={`interface Polymorphism {
-  execute(input: string): string;
+  typescript={`abstract class Shape {
+  // Abstract method to be implemented by subclasses
+  abstract calculateArea(): number;
 }
 
-class PolymorphismImpl implements Polymorphism {
-  execute(input: string): string {
-    return input.trim();
+class Circle extends Shape {
+  constructor(private radius: number) { super(); }
+  
+  calculateArea(): number {
+    return Math.PI * this.radius * this.radius;
   }
 }
 
-const demo: Polymorphism = new PolymorphismImpl();
-console.log(demo.execute('sample'));`}
-  java={`interface Polymorphism {
-  String execute(String input);
-}
-
-class PolymorphismImpl implements Polymorphism {
-  public String execute(String input) {
-    return input.trim();
+class Rectangle extends Shape {
+  constructor(private width: number, private height: number) { super(); }
+  
+  calculateArea(): number {
+    return this.width * this.height;
   }
 }
 
-Polymorphism demo = new PolymorphismImpl();
-System.out.println(demo.execute("sample"));`}
-  python={`class Polymorphism:
-    def execute(self, input: str) -> str:
-        raise NotImplementedError
+// Processing objects polymorphically
+const shapes: Shape[] = [new Circle(5), new Rectangle(4, 6)];
 
-class PolymorphismImpl(Polymorphism):
-    def execute(self, input: str) -> str:
-        return input.strip()
+shapes.forEach(shape => {
+  // We don't care what specific Shape it is, we just call the method!
+  console.log(shape.calculateArea()); 
+});`}
+  java={`abstract class Shape {
+  abstract double calculateArea();
+}
 
-demo: Polymorphism = PolymorphismImpl()
-print(demo.execute("sample"))`}
+class Circle extends Shape {
+  private double radius;
+  public Circle(double r) { this.radius = r; }
+  
+  @Override
+  public double calculateArea() {
+    return Math.PI * radius * radius;
+  }
+}
+
+class Rectangle extends Shape {
+  private double w, h;
+  public Rectangle(double w, double h) { this.w = w; this.h = h; }
+  
+  @Override
+  public double calculateArea() { return w * h; }
+}
+
+public class Main {
+  public static void main(String[] args) {
+    Shape[] shapes = { new Circle(5), new Rectangle(4, 6) };
+    
+    // Polymorphic processing
+    for (Shape shape : shapes) {
+      System.out.println(shape.calculateArea());
+    }
+  }
+}`}
+  python={`from abc import ABC, abstractmethod
+import math
+
+class Shape(ABC):
+    @abstractmethod
+    def calculate_area(self) -> float:
+        pass
+
+class Circle(Shape):
+    def __init__(self, radius: float):
+        self.radius = radius
+        
+    def calculate_area(self) -> float:
+        return math.pi * (self.radius ** 2)
+
+class Rectangle(Shape):
+    def __init__(self, width: float, height: float):
+        self.width = width
+        self.height = height
+        
+    def calculate_area(self) -> float:
+        return self.width * self.height
+
+# Array containing multiple forms of shapes
+shapes: list[Shape] = [Circle(5), Rectangle(4, 6)]
+
+# Treating different classes as their common 'Shape' ancestor
+for shape in shapes:
+    print(shape.calculate_area()) `}
 />
 
 ## Gotchas
 
-- Copying the pattern mechanically without checking the problem constraints.
-- Ignoring object responsibilities, which usually leads to god classes.
+- **Checking Types**: If you find yourself writing a lot of `if (obj instanceof X) { ... } else if (obj instanceof Y)` checks, you are likely failing to use polymorphism correctly. You should be pushing that specific logic down into the overridden methods of the subclasses.

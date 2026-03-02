@@ -1,64 +1,126 @@
 ## Concept
 
-Assemble behaviors from components to avoid rigid class hierarchies. Keep the implementation minimal, but the boundaries explicit.
+**Composition** is a building block of Object-Oriented Design where complex objects are created by combining simpler, independent objects. Instead of an IS-A relationship (Inheritance), Composition forms a HAS-A relationship.
+
+If an object is composed of other objects, creating the composite usually creates the parts, and destroying the composite destroys the parts (strong lifecycle dependency). A weaker form of this is termed *Aggregation*.
 
 ## When to use
 
-- When you want a clear separation of concerns in object interactions.
-- When interview discussions require trade-offs, not just syntax.
-- When you need an example that maps quickly to production design decisions.
+- Favor composition over inheritance whenever possible! It provides greater flexibility.
+- When you want to model a strict "whole/part" relationship.
+- When the behavior of a component might change at runtime (you can swap composed objects, but you can't swap inherited classes).
 
 ## Diagram
 
 <MermaidDiagram chart={`classDiagram
-  class CompositionoverInheritanceContext {
-    +execute(): void
+  class Engine {
+    +start()
+    +stop()
   }
-  class CompositionoverInheritanceImplementation {
-    +execute(): void
+  
+  class Wheels {
+    +rotate()
   }
-  CompositionoverInheritanceContext --> CompositionoverInheritanceImplementation`} />
+  
+  class Car {
+    -Engine engine
+    -Wheels[] wheels
+    +drive()
+  }
+  
+  Car *-- Engine : "Has-a" (Composition)
+  Car *-- Wheels : "Has-a" (Composition)`} />
 
 ## Code
 
 <CodeBlock
-  typescript={`interface CompositionoverInheritance {
-  execute(input: string): string;
+  typescript={`// Simpler components
+class Engine {
+  start(): void { console.log('Engine running...'); }
 }
 
-class CompositionoverInheritanceImpl implements CompositionoverInheritance {
-  execute(input: string): string {
-    return input.trim();
+class Wheels {
+  rotate(): void { console.log('Wheels turning...'); }
+}
+
+// Complex composite object
+class Car {
+  private engine: Engine;
+  private wheels: Wheels;
+
+  constructor() {
+    // The Car creates and owns its parts
+    this.engine = new Engine();
+    this.wheels = new Wheels();
+  }
+
+  drive(): void {
+    this.engine.start();
+    this.wheels.rotate();
+    console.log('Car is moving!');
   }
 }
 
-const demo: CompositionoverInheritance = new CompositionoverInheritanceImpl();
-console.log(demo.execute('sample'));`}
-  java={`interface CompositionoverInheritance {
-  String execute(String input);
+const myCar = new Car();
+myCar.drive();`}
+  java={`// Simpler components
+class Engine {
+  public void start() { System.out.println("Engine running..."); }
 }
 
-class CompositionoverInheritanceImpl implements CompositionoverInheritance {
-  public String execute(String input) {
-    return input.trim();
+class Wheels {
+  public void rotate() { System.out.println("Wheels turning..."); }
+}
+
+// Complex composite object
+class Car {
+  private Engine engine;
+  private Wheels wheels;
+
+  public Car() {
+    this.engine = new Engine();
+    this.wheels = new Wheels();
+  }
+
+  public void drive() {
+    engine.start();
+    wheels.rotate();
+    System.out.println("Car is moving!");
   }
 }
 
-CompositionoverInheritance demo = new CompositionoverInheritanceImpl();
-System.out.println(demo.execute("sample"));`}
-  python={`class CompositionoverInheritance:
-    def execute(self, input: str) -> str:
-        raise NotImplementedError
+public class Main {
+  public static void main(String[] args) {
+    Car myCar = new Car();
+    myCar.drive();
+  }
+}`}
+  python={`# Simpler components
+class Engine:
+    def start(self):
+        print("Engine running...")
 
-class CompositionoverInheritanceImpl(CompositionoverInheritance):
-    def execute(self, input: str) -> str:
-        return input.strip()
+class Wheels:
+    def rotate(self):
+        print("Wheels turning...")
 
-demo: CompositionoverInheritance = CompositionoverInheritanceImpl()
-print(demo.execute("sample"))`}
+# Complex composite object
+class Car:
+    def __init__(self):
+        # The Car creates and owns its parts
+        self.engine = Engine()
+        self.wheels = Wheels()
+
+    def drive(self):
+        self.engine.start()
+        self.wheels.rotate()
+        print("Car is moving!")
+
+my_car = Car()
+my_car.drive()`}
 />
 
 ## Gotchas
 
-- Copying the pattern mechanically without checking the problem constraints.
-- Ignoring object responsibilities, which usually leads to god classes.
+- **Deep Nesting**: Having too many layers of composition can make the system harder to trace.
+- **Excessive Forwarding**: The composite class might become just a series of wrapper methods that blindly pass calls to the underlying components.

@@ -1,64 +1,115 @@
 ## Concept
 
-Reuse behavior with parent-child relationships where IS-A truly fits. Keep the implementation minimal, but the boundaries explicit.
+**Inheritance** is a mechanism where a new class (subclass or derived class) derives properties and behaviors (methods) from an existing class (base or superclass). This represents an **IS-A** relationship.
+
+It promotes code reusability and establishes a natural hierarchy between entities.
 
 ## When to use
 
-- When you want a clear separation of concerns in object interactions.
-- When interview discussions require trade-offs, not just syntax.
-- When you need an example that maps quickly to production design decisions.
+- When you have a clear "IS-A" relationship (e.g., a Dog IS-A Animal, a Manager IS-An Employee).
+- When you want to share common state and behavior among multiple derived classes to avoid duplication.
+- *Caution*: Default to **Composition over Inheritance**. Inheritance creates tight coupling and a rigid hierarchy that can be hard to change later.
 
 ## Diagram
 
 <MermaidDiagram chart={`classDiagram
-  class InheritanceContext {
-    +execute(): void
+  class Animal {
+    +String name
+    +eat()
+    +sleep()
   }
-  class InheritanceImplementation {
-    +execute(): void
+  
+  class Dog {
+    +bark()
   }
-  InheritanceContext --> InheritanceImplementation`} />
+  
+  class Cat {
+    +meow()
+  }
+  
+  Animal <|-- Dog : "Is-a" (Inherits)
+  Animal <|-- Cat : "Is-a" (Inherits)`} />
 
 ## Code
 
 <CodeBlock
-  typescript={`interface Inheritance {
-  execute(input: string): string;
-}
+  typescript={`// Base class
+class Animal {
+  constructor(public name: string) {}
 
-class InheritanceImpl implements Inheritance {
-  execute(input: string): string {
-    return input.trim();
+  eat(): void {
+    console.log(\`\${this.name} is eating.\`);
   }
 }
 
-const demo: Inheritance = new InheritanceImpl();
-console.log(demo.execute('sample'));`}
-  java={`interface Inheritance {
-  String execute(String input);
-}
+// Derived subclass inherits name and eat() from Animal
+class Dog extends Animal {
+  constructor(name: string) {
+    super(name); // Call base class constructor
+  }
 
-class InheritanceImpl implements Inheritance {
-  public String execute(String input) {
-    return input.trim();
+  bark(): void {
+    console.log(\`\${this.name} says Woof!\`);
   }
 }
 
-Inheritance demo = new InheritanceImpl();
-System.out.println(demo.execute("sample"));`}
-  python={`class Inheritance:
-    def execute(self, input: str) -> str:
-        raise NotImplementedError
+const myDog = new Dog("Buddy");
+myDog.eat();  // Inherited method
+myDog.bark(); // Subclass specific method`}
+  java={`// Base class
+class Animal {
+  protected String name;
 
-class InheritanceImpl(Inheritance):
-    def execute(self, input: str) -> str:
-        return input.strip()
+  public Animal(String name) {
+    this.name = name;
+  }
 
-demo: Inheritance = InheritanceImpl()
-print(demo.execute("sample"))`}
+  public void eat() {
+    System.out.println(this.name + " is eating.");
+  }
+}
+
+// Derived class
+class Dog extends Animal {
+  public Dog(String name) {
+    super(name); // Invoke base constructor
+  }
+
+  public void bark() {
+    System.out.println(this.name + " says Woof!");
+  }
+}
+
+public class Main {
+  public static void main(String[] args) {
+    Dog myDog = new Dog("Buddy");
+    myDog.eat();  // Inherited
+    myDog.bark(); // Specific
+  }
+}`}
+  python={`# Base class
+class Animal:
+    def __init__(self, name: str):
+        self.name = name
+
+    def eat(self) -> None:
+        print(f"{self.name} is eating.")
+
+# Derived subclass
+class Dog(Animal):
+    def __init__(self, name: str):
+        super().__init__(name) # Call parent constructor
+
+    def bark(self) -> None:
+        print(f"{self.name} says Woof!")
+
+my_dog = Dog("Buddy")
+my_dog.eat()  # Inherited method
+my_dog.bark() # Subclass specific method`}
 />
 
 ## Gotchas
 
-- Copying the pattern mechanically without checking the problem constraints.
-- Ignoring object responsibilities, which usually leads to god classes.
+- **Fragile Base Class problem**: A change in the superclass can inadvertently break subclasses.
+- **Deep Inheritance Trees**: Having 5+ layers of inheritance makes the code incredibly hard to follow and debug.
+- **Inheriting for code reuse only**: If Class B needs some code from Class A, but B is *not* an A (e.g., Stack inheriting from ArrayList), you should use Composition instead.

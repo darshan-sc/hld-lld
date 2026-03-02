@@ -1,64 +1,124 @@
 ## Concept
 
-Apply SRP, OCP, LSP, ISP, and DIP to keep designs extensible. Keep the implementation minimal, but the boundaries explicit.
+**SOLID** is an acronym representing five foundational design principles for writing clean, maintainable, and scalable Object-Oriented software. Following these principles helps mitigate the impact of changing requirements.
 
-## When to use
+1.  **S - Single Responsibility Principle (SRP):** A class should have one, and only one, reason to change.
+2.  **O - Open/Closed Principle (OCP):** Software entities should be open for extension, but closed for modification.
+3.  **L - Liskov Substitution Principle (LSP):** Subtypes must be substitutable for their base types without altering program correctness.
+4.  **I - Interface Segregation Principle (ISP):** Clients should not be forced to depend upon interfaces that they do not use.
+5.  **D - Dependency Inversion Principle (DIP):** High-level modules should not depend on low-level modules. Both should depend upon abstractions.
 
-- When you want a clear separation of concerns in object interactions.
-- When interview discussions require trade-offs, not just syntax.
-- When you need an example that maps quickly to production design decisions.
+## The Principles at a Glance
 
-## Diagram
+<MermaidDiagram chart={`mindmap
+  root((SOLID Pillars))
+    SRP
+      ::icon(fa fa-check)
+      One Reason to Change
+      Cohesive Classes
+    OCP
+      Extend, Don't Edit
+      Use Polymorphism
+    LSP
+      Substitutability
+      Contract Fulfillment
+    ISP
+      Small Interfaces
+      No Fat Signatures
+    DIP
+      Depend on Abstractions
+      Inversion of Control`} />
 
-<MermaidDiagram chart={`classDiagram
-  class SOLIDPrinciplesContext {
-    +execute(): void
-  }
-  class SOLIDPrinciplesImplementation {
-    +execute(): void
-  }
-  SOLIDPrinciplesContext --> SOLIDPrinciplesImplementation`} />
+## Code Example: Single Responsibility Principle
 
-## Code
+Below is an illustration of breaking SRP and then fixing it. 
 
 <CodeBlock
-  typescript={`interface SOLIDPrinciples {
-  execute(input: string): string;
+  typescript={`// ❌ BAD: This class handles multiple responsibilities:
+// 1. Employee data management
+// 2. Report formatting
+// 3. Database persistence
+class Employee {
+  constructor(public name: string, public pay: number) {}
+  
+  calculatePay(): number { return this.pay; }
+  generateReport(): string { return \`Report for \${this.name}\`; }
+  saveToDatabase(): void { /* SQL Magic */ }
 }
 
-class SOLIDPrinciplesImpl implements SOLIDPrinciples {
-  execute(input: string): string {
-    return input.trim();
+// ✅ GOOD: Split into distinct, single-purpose classes
+class EmployeeData {
+  constructor(public name: string, public pay: number) {}
+}
+
+class PayCalculator {
+  calculate(emp: EmployeeData): number { return emp.pay; }
+}
+
+class ReportGenerator {
+  generate(emp: EmployeeData): string { return \`Report for \${emp.name}\`; }
+}
+
+class EmployeeRepository {
+  save(emp: EmployeeData): void { /* SQL Magic */ }
+}`}
+  java={`// ❌ BAD: One God Class doing everything
+class Employee {
+  private String name;
+  public String getName() { return this.name; }
+  
+  public double calculatePay() { return 1000; }
+  public String generateReport() { return "Report..."; }
+  public void saveToDb() { /* DB Code.. */ }
+}
+
+// ✅ GOOD: Distinct responsibilities
+class EmployeeData {
+  private String name;
+}
+
+class ReportGenerator {
+  public String generate(EmployeeData emp) { 
+    return "Report..."; 
   }
 }
 
-const demo: SOLIDPrinciples = new SOLIDPrinciplesImpl();
-console.log(demo.execute('sample'));`}
-  java={`interface SOLIDPrinciples {
-  String execute(String input);
-}
-
-class SOLIDPrinciplesImpl implements SOLIDPrinciples {
-  public String execute(String input) {
-    return input.trim();
+class EmployeeRepository {
+  public void save(EmployeeData emp) { 
+    /* DB code.. */ 
   }
-}
+}`}
+  python={`# ❌ BAD: God Object
+class Employee:
+    def __init__(self, name, pay):
+        self.name = name
+        self.pay = pay
 
-SOLIDPrinciples demo = new SOLIDPrinciplesImpl();
-System.out.println(demo.execute("sample"));`}
-  python={`class SOLIDPrinciples:
-    def execute(self, input: str) -> str:
-        raise NotImplementedError
+    def calculate_pay(self):
+        return self.pay
 
-class SOLIDPrinciplesImpl(SOLIDPrinciples):
-    def execute(self, input: str) -> str:
-        return input.strip()
+    def generate_report(self):
+        return f"Report: {self.name}"
 
-demo: SOLIDPrinciples = SOLIDPrinciplesImpl()
-print(demo.execute("sample"))`}
+    def save_to_db(self):
+        pass # Database logic
+
+# ✅ GOOD: Separated concerns
+class EmployeeData:
+    def __init__(self, name, pay):
+        self.name = name
+        self.pay = pay
+
+class ReportGenerator:
+    def generate(self, emp: EmployeeData):
+        return f"Report: {emp.name}"
+
+class EmployeeRepository:
+    def save(self, emp: EmployeeData):
+        pass # Database logic`}
 />
 
 ## Gotchas
 
-- Copying the pattern mechanically without checking the problem constraints.
-- Ignoring object responsibilities, which usually leads to god classes.
+- **Over-engineering**: Applying every SOLID principle religiously to a 50-line script is overkill. Apply patterns where the complexity demands it.
+- **Micro-interfaces (ISP)**: Creating an interface for literally every single method can lead to excessive fragmentation and interface explosion.
