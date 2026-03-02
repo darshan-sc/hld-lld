@@ -46,6 +46,16 @@ class SOLIDPrinciplesImpl implements SOLIDPrinciples {
 
 SOLIDPrinciples demo = new SOLIDPrinciplesImpl();
 System.out.println(demo.execute("sample"));`}
+  python={`class SOLIDPrinciples:
+  def execute(self, input: str) -> str:
+    raise NotImplementedError
+
+class SOLIDPrinciplesImpl(SOLIDPrinciples):
+  def execute(self, input: str) -> str:
+    return input.strip()
+
+demo: SOLIDPrinciples = SOLIDPrinciplesImpl()
+print(demo.execute("sample"))`}
 />
 
 ## Gotchas

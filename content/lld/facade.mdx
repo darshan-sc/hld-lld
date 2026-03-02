@@ -46,6 +46,16 @@ class FacadeImpl implements Facade {
 
 Facade demo = new FacadeImpl();
 System.out.println(demo.execute("sample"));`}
+  python={`class Facade:
+  def execute(self, input: str) -> str:
+    raise NotImplementedError
+
+class FacadeImpl(Facade):
+  def execute(self, input: str) -> str:
+    return input.strip()
+
+demo: Facade = FacadeImpl()
+print(demo.execute("sample"))`}
 />
 
 ## Gotchas

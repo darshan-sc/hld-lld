@@ -46,6 +46,16 @@ class CommandImpl implements Command {
 
 Command demo = new CommandImpl();
 System.out.println(demo.execute("sample"));`}
+  python={`class Command:
+  def execute(self, input: str) -> str:
+    raise NotImplementedError
+
+class CommandImpl(Command):
+  def execute(self, input: str) -> str:
+    return input.strip()
+
+demo: Command = CommandImpl()
+print(demo.execute("sample"))`}
 />
 
 ## Gotchas

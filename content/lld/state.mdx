@@ -46,6 +46,16 @@ class StateImpl implements State {
 
 State demo = new StateImpl();
 System.out.println(demo.execute("sample"));`}
+  python={`class State:
+  def execute(self, input: str) -> str:
+    raise NotImplementedError
+
+class StateImpl(State):
+  def execute(self, input: str) -> str:
+    return input.strip()
+
+demo: State = StateImpl()
+print(demo.execute("sample"))`}
 />
 
 ## Gotchas

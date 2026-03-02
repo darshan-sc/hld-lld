@@ -46,6 +46,16 @@ class CompositionoverInheritanceImpl implements CompositionoverInheritance {
 
 CompositionoverInheritance demo = new CompositionoverInheritanceImpl();
 System.out.println(demo.execute("sample"));`}
+  python={`class CompositionoverInheritance:
+  def execute(self, input: str) -> str:
+    raise NotImplementedError
+
+class CompositionoverInheritanceImpl(CompositionoverInheritance):
+  def execute(self, input: str) -> str:
+    return input.strip()
+
+demo: CompositionoverInheritance = CompositionoverInheritanceImpl()
+print(demo.execute("sample"))`}
 />
 
 ## Gotchas

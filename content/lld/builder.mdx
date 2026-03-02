@@ -46,6 +46,16 @@ class BuilderImpl implements Builder {
 
 Builder demo = new BuilderImpl();
 System.out.println(demo.execute("sample"));`}
+  python={`class Builder:
+  def execute(self, input: str) -> str:
+    raise NotImplementedError
+
+class BuilderImpl(Builder):
+  def execute(self, input: str) -> str:
+    return input.strip()
+
+demo: Builder = BuilderImpl()
+print(demo.execute("sample"))`}
 />
 
 ## Gotchas

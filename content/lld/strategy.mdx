@@ -46,6 +46,16 @@ class StrategyImpl implements Strategy {
 
 Strategy demo = new StrategyImpl();
 System.out.println(demo.execute("sample"));`}
+  python={`class Strategy:
+  def execute(self, input: str) -> str:
+    raise NotImplementedError
+
+class StrategyImpl(Strategy):
+  def execute(self, input: str) -> str:
+    return input.strip()
+
+demo: Strategy = StrategyImpl()
+print(demo.execute("sample"))`}
 />
 
 ## Gotchas

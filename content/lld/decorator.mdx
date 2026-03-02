@@ -46,6 +46,16 @@ class DecoratorImpl implements Decorator {
 
 Decorator demo = new DecoratorImpl();
 System.out.println(demo.execute("sample"));`}
+  python={`class Decorator:
+  def execute(self, input: str) -> str:
+    raise NotImplementedError
+
+class DecoratorImpl(Decorator):
+  def execute(self, input: str) -> str:
+    return input.strip()
+
+demo: Decorator = DecoratorImpl()
+print(demo.execute("sample"))`}
 />
 
 ## Gotchas
