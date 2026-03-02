@@ -1,64 +1,176 @@
 ## Concept
 
-Move object creation into polymorphic factory operations. Keep the implementation minimal, but the boundaries explicit.
+The **Factory Method** is a creational design pattern that provides an interface for creating objects in a superclass, but allows subclasses to alter the type of objects that will be created.
+
+Instead of calling the exact constructor directly using `new`, you call a special "factory" method. The subclasses can override this method to change the class of products being created.
 
 ## When to use
 
-- When you want a clear separation of concerns in object interactions.
-- When interview discussions require trade-offs, not just syntax.
-- When you need an example that maps quickly to production design decisions.
+- When you don't know beforehand the exact types and dependencies of the objects your code should work with.
+- When you want to provide users of your library or framework with a way to extend its internal components.
+- When you want to save system resources by reusing existing objects instead of rebuilding them each time (e.g., maintaining a pool of database connections).
 
 ## Diagram
 
 <MermaidDiagram chart={`classDiagram
-  class FactoryMethodContext {
-    +execute(): void
+  class Logistics {
+    <<abstract>>
+    +planDelivery()
+    +createTransport() Transport*
   }
-  class FactoryMethodImplementation {
-    +execute(): void
+  
+  class RoadLogistics {
+    +createTransport() Transport
   }
-  FactoryMethodContext --> FactoryMethodImplementation`} />
+  
+  class SeaLogistics {
+    +createTransport() Transport
+  }
+  
+  class Transport {
+    <<interface>>
+    +deliver()
+  }
+  
+  class Truck {
+    +deliver()
+  }
+  
+  class Ship {
+    +deliver()
+  }
+  
+  Logistics <|-- RoadLogistics
+  Logistics <|-- SeaLogistics
+  
+  Transport <|.. Truck
+  Transport <|.. Ship
+  
+  RoadLogistics ..> Truck : Creates
+  SeaLogistics ..> Ship : Creates`} />
 
 ## Code
 
 <CodeBlock
-  typescript={`interface FactoryMethod {
-  execute(input: string): string;
+  typescript={`// The Product interface
+interface Transport {
+  deliver(): string;
 }
 
-class FactoryMethodImpl implements FactoryMethod {
-  execute(input: string): string {
-    return input.trim();
+// Concrete Products
+class Truck implements Transport {
+  deliver(): string { return "Delivering by land in a box."; }
+}
+
+class Ship implements Transport {
+  deliver(): string { return "Delivering by sea in a container."; }
+}
+
+// The Creator
+abstract class Logistics {
+  // The Factory Method
+  abstract createTransport(): Transport;
+
+  // Core business logic relies on the Factory Method
+  planDelivery(): void {
+    const transport = this.createTransport();
+    console.log("Logistics: " + transport.deliver());
   }
 }
 
-const demo: FactoryMethod = new FactoryMethodImpl();
-console.log(demo.execute('sample'));`}
-  java={`interface FactoryMethod {
-  String execute(String input);
+// Concrete Creators override the factory method
+class RoadLogistics extends Logistics {
+  createTransport(): Transport { return new Truck(); }
 }
 
-class FactoryMethodImpl implements FactoryMethod {
-  public String execute(String input) {
-    return input.trim();
+class SeaLogistics extends Logistics {
+  createTransport(): Transport { return new Ship(); }
+}
+
+// Client Code
+new RoadLogistics().planDelivery();
+new SeaLogistics().planDelivery();`}
+  java={`interface Transport {
+  String deliver();
+}
+
+class Truck implements Transport {
+  public String deliver() { return "Delivering by land in a box."; }
+}
+
+class Ship implements Transport {
+  public String deliver() { return "Delivering by sea in a container."; }
+}
+
+abstract class Logistics {
+  // The Factory Method
+  public abstract Transport createTransport();
+
+  public void planDelivery() {
+    Transport transport = createTransport();
+    System.out.println("Logistics: " + transport.deliver());
   }
 }
 
-FactoryMethod demo = new FactoryMethodImpl();
-System.out.println(demo.execute("sample"));`}
-  python={`class FactoryMethod:
-    def execute(self, input: str) -> str:
-        raise NotImplementedError
+class RoadLogistics extends Logistics {
+  @Override
+  public Transport createTransport() { return new Truck(); }
+}
 
-class FactoryMethodImpl(FactoryMethod):
-    def execute(self, input: str) -> str:
-        return input.strip()
+class SeaLogistics extends Logistics {
+  @Override
+  public Transport createTransport() { return new Ship(); }
+}
 
-demo: FactoryMethod = FactoryMethodImpl()
-print(demo.execute("sample"))`}
+public class Main {
+  public static void main(String[] args) {
+    new RoadLogistics().planDelivery();
+    new SeaLogistics().planDelivery();
+  }
+}`}
+  python={`from abc import ABC, abstractmethod
+
+# Product interface
+class Transport(ABC):
+    @abstractmethod
+    def deliver(self) -> str:
+        pass
+
+# Concrete Products
+class Truck(Transport):
+    def deliver(self) -> str:
+        return "Delivering by land in a box."
+
+class Ship(Transport):
+    def deliver(self) -> str:
+        return "Delivering by sea in a container."
+
+# Creator
+class Logistics(ABC):
+    # Factory Method
+    @abstractmethod
+    def create_transport(self) -> Transport:
+        pass
+
+    def plan_delivery(self) -> None:
+        transport = self.create_transport()
+        print(f"Logistics: {transport.deliver()}")
+
+# Concrete Creators
+class RoadLogistics(Logistics):
+    def create_transport(self) -> Transport:
+        return Truck()
+
+class SeaLogistics(Logistics):
+    def create_transport(self) -> Transport:
+        return Ship()
+
+# Client Code
+RoadLogistics().plan_delivery()
+SeaLogistics().plan_delivery()`}
 />
 
 ## Gotchas
 
-- Copying the pattern mechanically without checking the problem constraints.
-- Ignoring object responsibilities, which usually leads to god classes.
+- **Subclass Explosion**: The pattern requires creating a new creator subclass for every new product type. If the creator hierarchy is already complex, merging it with the factory method might cause an explosion of classes.
+- **Factory vs Simple Factory vs Abstract Factory**: Don't confuse the Factory Method (which relies on inheritance) with a Simple Factory (a class with one big `switch` statement) or an Abstract Factory (which creates *families* of products).

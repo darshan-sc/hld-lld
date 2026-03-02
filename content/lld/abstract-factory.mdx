@@ -1,64 +1,173 @@
 ## Concept
 
-Create compatible product families without coupling to concrete classes. Keep the implementation minimal, but the boundaries explicit.
+The **Abstract Factory** is a creational design pattern that lets you produce families of related or dependent objects without specifying their concrete classes.
+
+When you have a set of related products (e.g., a `Button`, a `Checkbox`, and a `MacOsButton`, `WindowsButton`), an Abstract Factory defines an interface for creating all distinct products in a family. Concrete factories implement this interface to generate products for a specific family/variant.
 
 ## When to use
 
-- When you want a clear separation of concerns in object interactions.
-- When interview discussions require trade-offs, not just syntax.
-- When you need an example that maps quickly to production design decisions.
+- When your code needs to work with various families of related products, but you don't want it to depend on the concrete classes of those products (to allow for future extensibility).
+- When a system needs to be configured with one of multiple families of products. Let's say, your UI must support both "Dark Theme" and "Light Theme" components simultaneously.
 
 ## Diagram
 
 <MermaidDiagram chart={`classDiagram
-  class AbstractFactoryContext {
-    +execute(): void
+  class GUIFactory {
+    <<interface>>
+    +createButton() Button
+    +createCheckbox() Checkbox
   }
-  class AbstractFactoryImplementation {
-    +execute(): void
+  
+  class WinFactory {
+    +createButton() Button
+    +createCheckbox() Checkbox
   }
-  AbstractFactoryContext --> AbstractFactoryImplementation`} />
+  
+  class MacFactory {
+    +createButton() Button
+    +createCheckbox() Checkbox
+  }
+  
+  GUIFactory <|.. WinFactory
+  GUIFactory <|.. MacFactory
+  
+  class Button { <<interface>> }
+  class WinButton
+  class MacButton
+  Button <|.. WinButton
+  Button <|.. MacButton
+  
+  class Checkbox { <<interface>> }
+  class WinCheckbox
+  class MacCheckbox
+  Checkbox <|.. WinCheckbox
+  Checkbox <|.. MacCheckbox
+  
+  WinFactory ..> WinButton : Creates
+  WinFactory ..> WinCheckbox : Creates
+  MacFactory ..> MacButton : Creates
+  MacFactory ..> MacCheckbox : Creates`} />
 
 ## Code
 
 <CodeBlock
-  typescript={`interface AbstractFactory {
-  execute(input: string): string;
+  typescript={`// Abstract Products
+interface Button { render(): string; }
+interface Checkbox { toggle(): string; }
+
+// Concrete Products for Windows
+class WinButton implements Button { render() { return "Render Windows Button"; } }
+class WinCheckbox implements Checkbox { toggle() { return "Toggle Windows Checkbox"; } }
+
+// Concrete Products for Mac
+class MacButton implements Button { render() { return "Render Mac Button"; } }
+class MacCheckbox implements Checkbox { toggle() { return "Toggle Mac Checkbox"; } }
+
+// Abstract Factory
+interface GUIFactory {
+  createButton(): Button;
+  createCheckbox(): Checkbox;
 }
 
-class AbstractFactoryImpl implements AbstractFactory {
-  execute(input: string): string {
-    return input.trim();
+// Concrete Factories
+class WinFactory implements GUIFactory {
+  createButton(): Button { return new WinButton(); }
+  createCheckbox(): Checkbox { return new WinCheckbox(); }
+}
+class MacFactory implements GUIFactory {
+  createButton(): Button { return new MacButton(); }
+  createCheckbox(): Checkbox { return new MacCheckbox(); }
+}
+
+// Application Code (Client) depends only on Abstract Factory interfaces
+function renderUI(factory: GUIFactory) {
+  const btn = factory.createButton();
+  const box = factory.createCheckbox();
+  console.log(btn.render());
+  console.log(box.toggle());
+}
+
+renderUI(new MacFactory());`}
+  java={`interface Button { String render(); }
+interface Checkbox { String toggle(); }
+
+class WinButton implements Button { public String render() { return "Render Win Button"; } }
+class WinCheckbox implements Checkbox { public String toggle() { return "Toggle Win Checkbox"; } }
+
+class MacButton implements Button { public String render() { return "Render Mac Button"; } }
+class MacCheckbox implements Checkbox { public String toggle() { return "Toggle Mac Checkbox"; } }
+
+interface GUIFactory {
+  Button createButton();
+  Checkbox createCheckbox();
+}
+
+class WinFactory implements GUIFactory {
+  public Button createButton() { return new WinButton(); }
+  public Checkbox createCheckbox() { return new WinCheckbox(); }
+}
+class MacFactory implements GUIFactory {
+  public Button createButton() { return new MacButton(); }
+  public Checkbox createCheckbox() { return new MacCheckbox(); }
+}
+
+public class Main {
+  public static void renderUI(GUIFactory factory) {
+    System.out.println(factory.createButton().render());
+    System.out.println(factory.createCheckbox().toggle());
   }
-}
 
-const demo: AbstractFactory = new AbstractFactoryImpl();
-console.log(demo.execute('sample'));`}
-  java={`interface AbstractFactory {
-  String execute(String input);
-}
-
-class AbstractFactoryImpl implements AbstractFactory {
-  public String execute(String input) {
-    return input.trim();
+  public static void main(String[] args) {
+    renderUI(new MacFactory());
   }
-}
+}`}
+  python={`from abc import ABC, abstractmethod
 
-AbstractFactory demo = new AbstractFactoryImpl();
-System.out.println(demo.execute("sample"));`}
-  python={`class AbstractFactory:
-    def execute(self, input: str) -> str:
-        raise NotImplementedError
+# Abstract Products
+class Button(ABC):
+    @abstractmethod
+    def render(self) -> str: pass
 
-class AbstractFactoryImpl(AbstractFactory):
-    def execute(self, input: str) -> str:
-        return input.strip()
+class Checkbox(ABC):
+    @abstractmethod
+    def toggle(self) -> str: pass
 
-demo: AbstractFactory = AbstractFactoryImpl()
-print(demo.execute("sample"))`}
+# Concrete Products
+class WinButton(Button):
+    def render(self) -> str: return "Render Win Button"
+class WinCheckbox(Checkbox):
+    def toggle(self) -> str: return "Toggle Win Checkbox"
+
+class MacButton(Button):
+    def render(self) -> str: return "Render Mac Button"
+class MacCheckbox(Checkbox):
+    def toggle(self) -> str: return "Toggle Mac Checkbox"
+
+# Abstract Factory
+class GUIFactory(ABC):
+    @abstractmethod
+    def create_button(self) -> Button: pass
+    @abstractmethod
+    def create_checkbox(self) -> Checkbox: pass
+
+# Concrete Factories
+class WinFactory(GUIFactory):
+    def create_button(self) -> Button: return WinButton()
+    def create_checkbox(self) -> Checkbox: return WinCheckbox()
+
+class MacFactory(GUIFactory):
+    def create_button(self) -> Button: return MacButton()
+    def create_checkbox(self) -> Checkbox: return MacCheckbox()
+
+# Application Code
+def render_ui(factory: GUIFactory):
+    print(factory.create_button().render())
+    print(factory.create_checkbox().toggle())
+
+render_ui(MacFactory())`}
 />
 
 ## Gotchas
 
-- Copying the pattern mechanically without checking the problem constraints.
-- Ignoring object responsibilities, which usually leads to god classes.
+- **Complexity and Indirection**: Integrating Abstract Factory introduces an immense amount of new interfaces and classes to your code. Use it only when the codebase explicitly manages multiple families of products.
+- **Adding new product types**: Adding a new product to the family (e.g., `TextField`) requires changing the Abstract Factory interface and ALL of its concrete implementations.

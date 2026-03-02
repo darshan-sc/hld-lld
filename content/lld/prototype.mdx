@@ -1,64 +1,151 @@
 ## Concept
 
-Duplicate objects by cloning rather than repeated construction. Keep the implementation minimal, but the boundaries explicit.
+**Prototype** is a creational design pattern that lets you copy existing objects without making your code dependent on their underlying classes. 
+
+Instead of creating an object from scratch and copying its values field by field (which might involve private fields you can't access), you delegate the cloning process to the actual object that is being cloned.
 
 ## When to use
 
-- When you want a clear separation of concerns in object interactions.
-- When interview discussions require trade-offs, not just syntax.
-- When you need an example that maps quickly to production design decisions.
+- When your code shouldn't depend on the concrete classes of objects that need to be copied.
+- When creating an object from scratch is incredibly expensive (e.g., parsing a huge dataset from a database). If you already have one instance, cloning it is much faster.
+- When you want to reduce the number of subclasses that only differ in the way they initialize their objects. Instead, you can have a registry of pre-configured "prototypes" and just clone them.
 
 ## Diagram
 
 <MermaidDiagram chart={`classDiagram
-  class PrototypeContext {
-    +execute(): void
+  class Prototype {
+    <<interface>>
+    +clone() Prototype
   }
-  class PrototypeImplementation {
-    +execute(): void
+  
+  class Enemy {
+    -int health
+    -int speed
+    -Weapon currentWeapon
+    +Enemy(Enemy source)
+    +clone() Prototype
   }
-  PrototypeContext --> PrototypeImplementation`} />
+  
+  class Zombie {
+    -int infectionLevel
+    +Zombie(Zombie source)
+    +clone() Prototype
+  }
+  
+  Prototype <|.. Enemy
+  Enemy <|-- Zombie
+  
+  note for Enemy "clone() returns\nnew Enemy(this)"`} />
 
 ## Code
 
 <CodeBlock
-  typescript={`interface Prototype {
-  execute(input: string): string;
+  typescript={`// Prototype interface
+interface Shape {
+  clone(): Shape;
 }
 
-class PrototypeImpl implements Prototype {
-  execute(input: string): string {
-    return input.trim();
+class Rectangle implements Shape {
+  public width: number;
+  public height: number;
+  public color: string;
+
+  constructor(width: number, height: number, color: string) {
+    this.width = width;
+    this.height = height;
+    this.color = color;
+  }
+
+  // The clone method handles the replication
+  clone(): this {
+    // In TypeScript, Objects can be shallow copied easily.
+    // Deep copies would require assigning properties manually.
+    const cloned = Object.assign(Object.create(Object.getPrototypeOf(this)), this);
+    return cloned;
   }
 }
 
-const demo: Prototype = new PrototypeImpl();
-console.log(demo.execute('sample'));`}
-  java={`interface Prototype {
-  String execute(String input);
+// Client
+const original = new Rectangle(10, 20, "red");
+const replica = original.clone();
+
+replica.color = "blue"; // Modify the clone freely
+console.log(original.color); // "red"
+console.log(replica.color);  // "blue"`}
+  java={`abstract class Shape implements Cloneable {
+  public int x;
+  public int y;
+  public String color;
+
+  public Shape() {}
+
+  // Copy constructor
+  public Shape(Shape target) {
+    if (target != null) {
+      this.x = target.x;
+      this.y = target.y;
+      this.color = target.color;
+    }
+  }
+
+  public abstract Shape clone();
 }
 
-class PrototypeImpl implements Prototype {
-  public String execute(String input) {
-    return input.trim();
+class Rectangle extends Shape {
+  public int width;
+  public int height;
+
+  public Rectangle() {}
+
+  public Rectangle(Rectangle target) {
+    super(target);
+    if (target != null) {
+      this.width = target.width;
+      this.height = target.height;
+    }
+  }
+
+  @Override
+  public Shape clone() {
+    return new Rectangle(this);
   }
 }
 
-Prototype demo = new PrototypeImpl();
-System.out.println(demo.execute("sample"));`}
-  python={`class Prototype:
-    def execute(self, input: str) -> str:
-        raise NotImplementedError
+public class Main {
+  public static void main(String[] args) {
+    Rectangle rect = new Rectangle();
+    rect.x = 10;
+    rect.y = 20;
+    rect.color = "red";
+    rect.width = 100;
 
-class PrototypeImpl(Prototype):
-    def execute(self, input: str) -> str:
-        return input.strip()
+    // Clone the prototype!
+    Rectangle clone = (Rectangle) rect.clone();
+    System.out.println(clone.color); // red
+  }
+}`}
+  python={`import copy
 
-demo: Prototype = PrototypeImpl()
-print(demo.execute("sample"))`}
+class Rectangle:
+    def __init__(self, width: int, height: int, color: str):
+        self.width = width
+        self.height = height
+        self.color = color
+
+    def clone(self):
+        # Python provides copy.copy() (shallow) and copy.deepcopy() (deep)
+        return copy.deepcopy(self)
+
+# Client Code
+original = Rectangle(10, 20, "red")
+replica = original.clone()
+
+replica.color = "blue"
+print(original.color) # "red"
+print(replica.color)  # "blue"`}
 />
 
 ## Gotchas
 
-- Copying the pattern mechanically without checking the problem constraints.
-- Ignoring object responsibilities, which usually leads to god classes.
+- **Shallow Copy vs Deep Copy**: When an object contains fields referencing other objects, a shallow clone only copies the *references*. The original and the clone will share the inner object! You must explicitly implement Deep Copy logic if your prototype contains nested objects.
+- **Circular References**: Cloning objects with circular references (A points to B, B points to A) can easily lead to infinite loops if not handled carefully.

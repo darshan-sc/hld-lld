@@ -1,64 +1,116 @@
 ## Concept
 
-Guarantee one instance with a shared access point. Keep the implementation minimal, but the boundaries explicit.
+**Singleton** is a creational design pattern that ensures a class has only one single instance throughout the application lifecycle, while providing a global access point to this instance.
 
 ## When to use
 
-- When you want a clear separation of concerns in object interactions.
-- When interview discussions require trade-offs, not just syntax.
-- When you need an example that maps quickly to production design decisions.
+- When a class in your program should have just a single instance available to all clients (e.g., a shared Database connection pool, an application Settings/Configuration object, or a Logger).
+- When you need stricter control over global variables. The Singleton guarantees that no other code will overwrite the instance.
 
 ## Diagram
 
 <MermaidDiagram chart={`classDiagram
-  class SingletonContext {
-    +execute(): void
+  class Database {
+    -static Database instance
+    -String connectionDetails
+    -Database()
+    +static getInstance() Database
+    +query(String sql)
   }
-  class SingletonImplementation {
-    +execute(): void
-  }
-  SingletonContext --> SingletonImplementation`} />
+  
+  note for Database "1. Constructor is private\n2. Instance holds itself statically"`} />
 
 ## Code
 
 <CodeBlock
-  typescript={`interface Singleton {
-  execute(input: string): string;
-}
+  typescript={`class Database {
+  // Static variable holding the single instance
+  private static instance: Database;
+  
+  private connectionDetails: string;
 
-class SingletonImpl implements Singleton {
-  execute(input: string): string {
-    return input.trim();
+  // Private constructor prevents external 'new' calls
+  private constructor() {
+    this.connectionDetails = "Connected to DB";
+  }
+
+  // The global access point
+  public static getInstance(): Database {
+    if (!Database.instance) {
+        Database.instance = new Database();
+    }
+    return Database.instance;
+  }
+
+  public query(sql: string): void {
+    console.log(\`Executing [\${sql}] using \${this.connectionDetails}\`);
   }
 }
 
-const demo: Singleton = new SingletonImpl();
-console.log(demo.execute('sample'));`}
-  java={`interface Singleton {
-  String execute(String input);
-}
+// Client Code
+const db1 = Database.getInstance();
+const db2 = Database.getInstance();
 
-class SingletonImpl implements Singleton {
-  public String execute(String input) {
-    return input.trim();
+console.log(db1 === db2); // true! They refer to the exact same object
+db1.query("SELECT * FROM users");`}
+  java={`class Database {
+  // Thread-safe formulation using volatile and double-checked locking
+  private static volatile Database instance;
+  private String connectionDetails;
+
+  private Database() {
+    this.connectionDetails = "Connected to DB";
+  }
+
+  public static Database getInstance() {
+    if (instance == null) {
+      synchronized (Database.class) {
+        if (instance == null) {
+          instance = new Database();
+        }
+      }
+    }
+    return instance;
+  }
+
+  public void query(String sql) {
+    System.out.println("Executing [" + sql + "] using " + connectionDetails);
   }
 }
 
-Singleton demo = new SingletonImpl();
-System.out.println(demo.execute("sample"));`}
-  python={`class Singleton:
-    def execute(self, input: str) -> str:
-        raise NotImplementedError
+public class Main {
+  public static void main(String[] args) {
+    Database db1 = Database.getInstance();
+    Database db2 = Database.getInstance();
+    
+    System.out.println(db1 == db2); // true
+    db1.query("SELECT * FROM users");
+  }
+}`}
+  python={`class Database:
+    _instance = None
+    
+    def __new__(cls):
+        # The __new__ method controls object creation in Python
+        if cls._instance is None:
+            # Create the one, actual instance
+            cls._instance = super(Database, cls).__new__(cls)
+            cls._instance.connection_details = "Connected to DB"
+        return cls._instance
 
-class SingletonImpl(Singleton):
-    def execute(self, input: str) -> str:
-        return input.strip()
+    def query(self, sql: str) -> None:
+        print(f"Executing [{sql}] using {self.connection_details}")
 
-demo: Singleton = SingletonImpl()
-print(demo.execute("sample"))`}
+# Client Code
+db1 = Database()
+db2 = Database()
+
+print(db1 is db2)  # True! They are the same object
+db1.query("SELECT * FROM users")`}
 />
 
 ## Gotchas
 
-- Copying the pattern mechanically without checking the problem constraints.
-- Ignoring object responsibilities, which usually leads to god classes.
+- **It is functionally a Global Variable**: Singletons introduce global state into an application, which makes unit testing incredibly difficult because state carries over between tests.
+- **Multithreading issues**: In multithreaded environments (like Java/C#), multiple threads calling `getInstance()` simultaneously for the first time might accidentally create multiple instances. You must use synchronization or locks.
+- **Dependency Injection**: Modern frameworks usually replace the Singleton pattern with Dependency Injection containers that manage a single instance for you, abstracting away the private constructor logic.

@@ -1,64 +1,219 @@
 ## Concept
 
-Construct complex objects in steps with optional configurations. Keep the implementation minimal, but the boundaries explicit.
+The **Builder** is a creational design pattern that lets you construct complex objects step by step. The pattern allows you to produce different types and representations of an object using the same construction code.
+
+Instead of having a massive constructor with a dozen optional parameters (the Telescoping Constructor anti-pattern), you extract the construction logic into separate *builder* objects.
 
 ## When to use
 
-- When you want a clear separation of concerns in object interactions.
-- When interview discussions require trade-offs, not just syntax.
-- When you need an example that maps quickly to production design decisions.
+- To get rid of a "telescoping constructor" (`new Pizza(size, crust, null, true, false, null)`).
+- When you want your code to be able to create different representations of some product (e.g., stone houses vs. wooden houses).
+- To construct Composite trees or other complex objects in a step-by-step fashion.
 
 ## Diagram
 
 <MermaidDiagram chart={`classDiagram
-  class BuilderContext {
-    +execute(): void
+  class Director {
+    -Builder builder
+    +constructSportsCar()
+    +constructSUV()
   }
-  class BuilderImplementation {
-    +execute(): void
+  
+  class Builder {
+    <<interface>>
+    +reset()
+    +setSeats(int)
+    +setEngine()
+    +setGPS()
   }
-  BuilderContext --> BuilderImplementation`} />
+  
+  class CarBuilder {
+    -Car car
+    +getResult() Car
+  }
+  
+  class CarManualBuilder {
+    -Manual manual
+    +getResult() Manual
+  }
+  
+  Director o-- Builder
+  Builder <|.. CarBuilder
+  Builder <|.. CarManualBuilder
+  
+  CarBuilder ..> Car : Creates
+  CarManualBuilder ..> Manual : Creates`} />
 
 ## Code
 
 <CodeBlock
-  typescript={`interface Builder {
-  execute(input: string): string;
+  typescript={`// The Product
+class House {
+  walls: number = 0;
+  doors: number = 0;
+  hasPool: boolean = false;
+  hasGarage: boolean = false;
 }
 
-class BuilderImpl implements Builder {
-  execute(input: string): string {
-    return input.trim();
+// The Builder Interface
+interface HouseBuilder {
+  reset(): this;
+  buildWalls(count: number): this;
+  buildDoors(count: number): this;
+  buildPool(): this;
+  buildGarage(): this;
+}
+
+// Concrete Builder
+class LuxuryHouseBuilder implements HouseBuilder {
+  private house: House;
+
+  constructor() { this.reset(); }
+
+  reset(): this {
+    this.house = new House();
+    return this;
+  }
+
+  buildWalls(count: number): this {
+    this.house.walls = count;
+    return this;
+  }
+
+  buildDoors(count: number): this {
+    this.house.doors = count;
+    return this;
+  }
+
+  buildPool(): this {
+    this.house.hasPool = true;
+    return this;
+  }
+
+  buildGarage(): this {
+    this.house.hasGarage = true;
+    return this;
+  }
+
+  getResult(): House {
+    const result = this.house;
+    this.reset();
+    return result;
   }
 }
 
-const demo: Builder = new BuilderImpl();
-console.log(demo.execute('sample'));`}
-  java={`interface Builder {
-  String execute(String input);
+// Client Code (often utilizing Method Chaining / Fluent Interface)
+const builder = new LuxuryHouseBuilder();
+const myHouse = builder
+  .buildWalls(4)
+  .buildDoors(2)
+  .buildGarage()
+  .getResult();
+
+console.log(myHouse);`}
+  java={`class House {
+  int walls;
+  int doors;
+  boolean hasPool;
+  boolean hasGarage;
 }
 
-class BuilderImpl implements Builder {
-  public String execute(String input) {
-    return input.trim();
+interface HouseBuilder {
+  HouseBuilder buildWalls(int count);
+  HouseBuilder buildDoors(int count);
+  HouseBuilder buildPool();
+  HouseBuilder buildGarage();
+  House getResult();
+}
+
+class LuxuryHouseBuilder implements HouseBuilder {
+  private House house = new House();
+
+  public HouseBuilder buildWalls(int count) {
+    this.house.walls = count;
+    return this;
+  }
+
+  public HouseBuilder buildDoors(int count) {
+    this.house.doors = count;
+    return this;
+  }
+
+  public HouseBuilder buildPool() {
+    this.house.hasPool = true;
+    return this;
+  }
+
+  public HouseBuilder buildGarage() {
+    this.house.hasGarage = true;
+    return this;
+  }
+
+  public House getResult() {
+    House result = this.house;
+    this.house = new House(); // reset
+    return result;
   }
 }
 
-Builder demo = new BuilderImpl();
-System.out.println(demo.execute("sample"));`}
-  python={`class Builder:
-    def execute(self, input: str) -> str:
-        raise NotImplementedError
+public class Main {
+  public static void main(String[] args) {
+    House myHouse = new LuxuryHouseBuilder()
+      .buildWalls(4)
+      .buildDoors(2)
+      .buildGarage()
+      .getResult();
+      
+    System.out.println("Garage: " + myHouse.hasGarage);
+  }
+}`}
+  python={`class House:
+    def __init__(self):
+        self.walls = 0
+        self.doors = 0
+        self.has_pool = False
+        self.has_garage = False
 
-class BuilderImpl(Builder):
-    def execute(self, input: str) -> str:
-        return input.strip()
+class LuxuryHouseBuilder:
+    def __init__(self):
+        self.reset()
+        
+    def reset(self):
+        self.house = House()
+        return self
 
-demo: Builder = BuilderImpl()
-print(demo.execute("sample"))`}
+    def build_walls(self, count: int):
+        self.house.walls = count
+        return self
+
+    def build_doors(self, count: int):
+        self.house.doors = count
+        return self
+
+    def build_pool(self):
+        self.house.has_pool = True
+        return self
+
+    def build_garage(self):
+        self.house.has_garage = True
+        return self
+
+    def get_result(self) -> House:
+        result = self.house
+        self.reset()
+        return result
+
+# Client Code
+builder = LuxuryHouseBuilder()
+my_house = (builder.build_walls(4)
+                  .build_doors(2)
+                  .build_garage()
+                  .get_result())
+
+print(f"Garage: {my_house.has_garage}")`}
 />
 
 ## Gotchas
 
-- Copying the pattern mechanically without checking the problem constraints.
-- Ignoring object responsibilities, which usually leads to god classes.
+- **Overkill logic**: You don't always need a separate `Director` class (which manages the step sequence). Often, the client chaining builder methods is completely sufficient and more readable.
+- **Mutability concerns**: Builders often carry mutable state while constructing. They must correctly `reset()` their state after `getResult()` to ensure they can be safely re-used.
