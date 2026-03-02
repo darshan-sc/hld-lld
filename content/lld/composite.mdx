@@ -1,64 +1,207 @@
 ## Concept
 
-Treat leaf nodes and object trees through one uniform API. Keep the implementation minimal, but the boundaries explicit.
+**Composite** is a structural design pattern that lets you compose objects into tree structures and then work with these structures as if they were individual objects.
+
+Using the Composite pattern makes sense only when the core model of your app can be represented as a tree. For example, a file system: Folders can contain Files or other Folders. You can calculate the total size of a Folder by summing the sizes of everything inside it, exactly the same way you get the size of a single File.
 
 ## When to use
 
-- When you want a clear separation of concerns in object interactions.
-- When interview discussions require trade-offs, not just syntax.
-- When you need an example that maps quickly to production design decisions.
+- When you have to implement a tree-like object structure (e.g., UI components, file directories, organizational charts).
+- When you want the client code to treat both simple and complex elements uniformly.
 
 ## Diagram
 
 <MermaidDiagram chart={`classDiagram
-  class CompositeContext {
-    +execute(): void
+  class Component {
+    <<interface>>
+    +execute()
   }
-  class CompositeImplementation {
-    +execute(): void
+  
+  class Leaf {
+    +execute()
   }
-  CompositeContext --> CompositeImplementation`} />
+  
+  class Composite {
+    -Component[] children
+    +add(Component)
+    +remove(Component)
+    +execute()
+  }
+  
+  Component <|.. Leaf
+  Component <|.. Composite
+  Composite o-- Component : "Contains"`} />
 
 ## Code
 
 <CodeBlock
-  typescript={`interface Composite {
-  execute(input: string): string;
+  typescript={`// 1. Base Component
+abstract class FileSystemComponent {
+  constructor(protected name: string) {}
+  abstract getSize(): number;
+  abstract print(indent?: string): void;
 }
 
-class CompositeImpl implements Composite {
-  execute(input: string): string {
-    return input.trim();
+// 2. Leaf (Simple Element)
+class File extends FileSystemComponent {
+  constructor(name: string, private size: number) {
+    super(name);
+  }
+
+  getSize(): number { return this.size; }
+
+  print(indent: string = ""): void {
+    console.log(\`\${indent}- File: \${this.name} (\${this.size} KB)\`);
   }
 }
 
-const demo: Composite = new CompositeImpl();
-console.log(demo.execute('sample'));`}
-  java={`interface Composite {
-  String execute(String input);
-}
+// 3. Composite (Complex Element)
+class Folder extends FileSystemComponent {
+  private children: FileSystemComponent[] = [];
 
-class CompositeImpl implements Composite {
-  public String execute(String input) {
-    return input.trim();
+  add(component: FileSystemComponent): void {
+    this.children.push(component);
+  }
+
+  getSize(): number {
+    return this.children.reduce((total, child) => total + child.getSize(), 0);
+  }
+
+  print(indent: string = ""): void {
+    console.log(\`\${indent}+ Folder: \${this.name}\`);
+    for (const child of this.children) {
+      child.print(indent + "  ");
+    }
   }
 }
 
-Composite demo = new CompositeImpl();
-System.out.println(demo.execute("sample"));`}
-  python={`class Composite:
-    def execute(self, input: str) -> str:
-        raise NotImplementedError
+// 4. Client Code
+const root = new Folder("root");
+const usr = new Folder("usr");
+const local = new File("local.txt", 10);
+const varLog = new File("var.log", 50);
 
-class CompositeImpl(Composite):
-    def execute(self, input: str) -> str:
-        return input.strip()
+usr.add(local);
+root.add(usr);
+root.add(varLog);
 
-demo: Composite = CompositeImpl()
-print(demo.execute("sample"))`}
+root.print();
+console.log(\`Total Size: \${root.getSize()} KB\`);`}
+  java={`import java.util.ArrayList;
+import java.util.List;
+
+abstract class FileSystemComponent {
+  protected String name;
+  public FileSystemComponent(String name) { this.name = name; }
+  public abstract int getSize();
+  public abstract void print(String indent);
+}
+
+class File extends FileSystemComponent {
+  private int size;
+  public File(String name, int size) {
+    super(name);
+    this.size = size;
+  }
+  
+  @Override
+  public int getSize() { return size; }
+  
+  @Override
+  public void print(String indent) {
+    System.out.println(indent + "- File: " + name + " (" + size + " KB)");
+  }
+}
+
+class Folder extends FileSystemComponent {
+  private List<FileSystemComponent> children = new ArrayList<>();
+  
+  public Folder(String name) { super(name); }
+  
+  public void add(FileSystemComponent comp) { children.add(comp); }
+  
+  @Override
+  public int getSize() {
+    return children.stream().mapToInt(FileSystemComponent::getSize).sum();
+  }
+  
+  @Override
+  public void print(String indent) {
+    System.out.println(indent + "+ Folder: " + name);
+    for (FileSystemComponent child : children) {
+      child.print(indent + "  ");
+    }
+  }
+}
+
+public class Main {
+  public static void main(String[] args) {
+    Folder root = new Folder("root");
+    Folder usr = new Folder("usr");
+    usr.add(new File("local.txt", 10));
+    root.add(usr);
+    root.add(new File("var.log", 50));
+    
+    root.print("");
+    System.out.println("Total Size: " + root.getSize() + " KB");
+  }
+}`}
+  python={`from abc import ABC, abstractmethod
+
+# Base Component
+class FileSystemComponent(ABC):
+    def __init__(self, name: str):
+        self.name = name
+
+    @abstractmethod
+    def get_size(self) -> int:
+        pass
+
+    @abstractmethod
+    def print(self, indent: str = "") -> None:
+        pass
+
+# Leaf
+class File(FileSystemComponent):
+    def __init__(self, name: str, size: int):
+        super().__init__(name)
+        self.size = size
+
+    def get_size(self) -> int:
+        return self.size
+
+    def print(self, indent: str = "") -> None:
+        print(f"{indent}- File: {self.name} ({self.size} KB)")
+
+# Composite
+class Folder(FileSystemComponent):
+    def __init__(self, name: str):
+        super().__init__(name)
+        self.children: list[FileSystemComponent] = []
+
+    def add(self, component: FileSystemComponent) -> None:
+        self.children.append(component)
+
+    def get_size(self) -> int:
+        return sum(child.get_size() for child in self.children)
+
+    def print(self, indent: str = "") -> None:
+        print(f"{indent}+ Folder: {self.name}")
+        for child in self.children:
+            child.print(indent + "  ")
+
+# Client Code
+root = Folder("root")
+usr = Folder("usr")
+usr.add(File("local.txt", 10))
+root.add(usr)
+root.add(File("var.log", 50))
+
+root.print()
+print(f"Total Size: {root.get_size()} KB")`}
 />
 
 ## Gotchas
 
-- Copying the pattern mechanically without checking the problem constraints.
-- Ignoring object responsibilities, which usually leads to god classes.
+- **Violating Interface Segregation**: The base Component interface might define methods like `add()` and `remove()`. If a Leaf inherits these, it either has to throw an Exception or do nothing. You must decide whether to optimize for safety (leaves don't have those methods) or for transparency (everything is treated identically).
+- **Overkill design**: Don't use Composite if your hierarchy is static and very simple.

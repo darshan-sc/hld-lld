@@ -1,64 +1,156 @@
 ## Concept
 
-Control access, caching, or security in front of a target object. Keep the implementation minimal, but the boundaries explicit.
+The **Proxy** is a structural design pattern that lets you provide a substitute or placeholder for another object. A proxy controls access to the original object, allowing you to perform something either before or after the request gets through to the original object.
+
+Unlike a Facade (which simplifies a complex system) or an Adapter (which alters an interface), a Proxy provides the *exact same interface* as the underlying object.
 
 ## When to use
 
-- When you want a clear separation of concerns in object interactions.
-- When interview discussions require trade-offs, not just syntax.
-- When you need an example that maps quickly to production design decisions.
+- **Virtual Proxy (Lazy Initialization)**: Delaying the creation of a heavy, memory-intensive object until it is absolutely needed.
+- **Protection Proxy**: Checking access controls or permissions before allowing the client to call the underlying object.
+- **Cache Proxy**: Caching the results of expensive requests (e.g., database queries or network downloads) to avoid hitting the actual object.
 
 ## Diagram
 
 <MermaidDiagram chart={`classDiagram
-  class ProxyContext {
-    +execute(): void
+  class Subject {
+    <<interface>>
+    +request()
   }
-  class ProxyImplementation {
-    +execute(): void
+  
+  class RealSubject {
+    +request()
   }
-  ProxyContext --> ProxyImplementation`} />
+  
+  class Proxy {
+    -RealSubject realSubject
+    +request()
+    -checkAccess() boolean
+  }
+  
+  Client --> Subject : Uses
+  Subject <|.. RealSubject
+  Subject <|.. Proxy
+  Proxy o-- RealSubject : "Delegates after checks"`} />
 
 ## Code
 
 <CodeBlock
-  typescript={`interface Proxy {
-  execute(input: string): string;
+  typescript={`// 1. The Subject Interface
+interface ThirdPartyYouTubeLib {
+  getVideo(id: string): string;
 }
 
-class ProxyImpl implements Proxy {
-  execute(input: string): string {
-    return input.trim();
+// 2. The Real Subject (Heavy/Expensive operations)
+class ThirdPartyYouTubeClass implements ThirdPartyYouTubeLib {
+  getVideo(id: string): string {
+    // Simulate expensive network call
+    console.log(\`[Network] Downloading video \${id}...\`);
+    return \`Video Data for \${id}\`;
   }
 }
 
-const demo: Proxy = new ProxyImpl();
-console.log(demo.execute('sample'));`}
-  java={`interface Proxy {
-  String execute(String input);
-}
+// 3. The Proxy (Implements exact same interface)
+class CachedYouTubeClass implements ThirdPartyYouTubeLib {
+  private service: ThirdPartyYouTubeLib;
+  private cache: Record<string, string> = {};
 
-class ProxyImpl implements Proxy {
-  public String execute(String input) {
-    return input.trim();
+  constructor(service: ThirdPartyYouTubeLib) {
+    this.service = service;
+  }
+
+  getVideo(id: string): string {
+    if (!this.cache[id]) {
+      // Lazy / Delegated execution
+      this.cache[id] = this.service.getVideo(id);
+    } else {
+      console.log(\`[Cache] Returning cached video \${id}...\`);
+    }
+    return this.cache[id];
   }
 }
 
-Proxy demo = new ProxyImpl();
-System.out.println(demo.execute("sample"));`}
-  python={`class Proxy:
-    def execute(self, input: str) -> str:
-        raise NotImplementedError
+// 4. Client Code
+const realService = new ThirdPartyYouTubeClass();
+const proxy = new CachedYouTubeClass(realService);
 
-class ProxyImpl(Proxy):
-    def execute(self, input: str) -> str:
-        return input.strip()
+// First time: Hits the network
+proxy.getVideo("vid_123"); 
+// Second time: Hits the cache!
+proxy.getVideo("vid_123");`}
+  java={`import java.util.HashMap;
+import java.util.Map;
 
-demo: Proxy = ProxyImpl()
-print(demo.execute("sample"))`}
+interface ThirdPartyYouTubeLib {
+  String getVideo(String id);
+}
+
+class ThirdPartyYouTubeClass implements ThirdPartyYouTubeLib {
+  public String getVideo(String id) {
+    System.out.println("[Network] Downloading video " + id + "...");
+    return "Video Data for " + id;
+  }
+}
+
+class CachedYouTubeClass implements ThirdPartyYouTubeLib {
+  private ThirdPartyYouTubeLib service;
+  private Map<String, String> cache = new HashMap<>();
+
+  public CachedYouTubeClass(ThirdPartyYouTubeLib service) {
+    this.service = service;
+  }
+
+  @Override
+  public String getVideo(String id) {
+    if (!cache.containsKey(id)) {
+      cache.put(id, service.getVideo(id));
+    } else {
+      System.out.println("[Cache] Returning cached video " + id + "...");
+    }
+    return cache.get(id);
+  }
+}
+
+public class Main {
+  public static void main(String[] args) {
+    ThirdPartyYouTubeLib proxy = new CachedYouTubeClass(new ThirdPartyYouTubeClass());
+    proxy.getVideo("vid_123"); // Network
+    proxy.getVideo("vid_123"); // Cache
+  }
+}`}
+  python={`from abc import ABC, abstractmethod
+
+# Interface
+class YouTubeLib(ABC):
+    @abstractmethod
+    def get_video(self, id: str) -> str: pass
+
+# Real Subject
+class RealYouTube(YouTubeLib):
+    def get_video(self, id: str) -> str:
+        print(f"[Network] Downloading video {id}...")
+        return f"Video Data for {id}"
+
+# Proxy
+class CachedYouTube(YouTubeLib):
+    def __init__(self, service: YouTubeLib):
+        self._service = service
+        self._cache = {}
+
+    def get_video(self, id: str) -> str:
+        if id not in self._cache:
+            self._cache[id] = self._service.get_video(id)
+        else:
+            print(f"[Cache] Returning cached video {id}...")
+        return self._cache[id]
+
+# Client
+proxy = CachedYouTube(RealYouTube())
+proxy.get_video("vid_123") # Hits Network
+proxy.get_video("vid_123") # Hits Cache`}
 />
 
 ## Gotchas
 
-- Copying the pattern mechanically without checking the problem constraints.
-- Ignoring object responsibilities, which usually leads to god classes.
+- **Decorator vs Proxy**: They have identical structures (a class wrapping another class). However, their *intents* are different. A Decorator adds responsibilities dynamically. A Proxy controls access, handles lifecycle, or adds technical caching—it generally doesn't alter core business logic.
+- **State synchronization**: If you are writing a Caching Proxy, be careful about cache invalidation! If the underlying data changes, the proxy will serve stale data unless you build an invalidation strategy.

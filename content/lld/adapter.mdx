@@ -1,64 +1,141 @@
 ## Concept
 
-Bridge incompatible interfaces so existing code still composes. Keep the implementation minimal, but the boundaries explicit.
+The **Adapter** is a structural design pattern that allows objects with incompatible interfaces to collaborate.
+
+It catches calls for one object and transforms them to format and interface recognizable by the second object. Think of it like a physical power adapter that allows a European plug to fit into a US wall outlet.
 
 ## When to use
 
-- When you want a clear separation of concerns in object interactions.
-- When interview discussions require trade-offs, not just syntax.
-- When you need an example that maps quickly to production design decisions.
+- When you want to use some existing class, but its interface isn't compatible with the rest of your code.
+- When you want to reuse several existing subclasses that lack some common functionality that can't be added to the superclass.
+- When integrating a 3rd party library, legacy code, or an external API into a modern codebase.
 
 ## Diagram
 
 <MermaidDiagram chart={`classDiagram
-  class AdapterContext {
-    +execute(): void
+  class Client {
+    <<interface>>
+    +request()
   }
-  class AdapterImplementation {
-    +execute(): void
+  
+  class ClientInterface {
+    <<interface>>
+    +methodA()
   }
-  AdapterContext --> AdapterImplementation`} />
+  
+  class Adapter {
+    -Adaptee adaptee
+    +methodA()
+  }
+  
+  class Adaptee {
+    +specificMethod()
+  }
+  
+  Client ..> ClientInterface : Uses
+  ClientInterface <|.. Adapter : Implements
+  Adapter --> Adaptee : "Wraps"
+  
+  note for Adapter "methodA() calls\nadaptee.specificMethod()"`} />
 
 ## Code
 
 <CodeBlock
-  typescript={`interface Adapter {
-  execute(input: string): string;
+  typescript={`// 1. The Target interface the client expects
+interface Target {
+  request(): string;
 }
 
-class AdapterImpl implements Adapter {
-  execute(input: string): string {
-    return input.trim();
+// 2. The Adaptee (incompatible interface, e.g., a 3rd party library)
+class Adaptee {
+  public specificRequest(): string {
+    return ".eetpadA eht fo roivaheb laicepS";
   }
 }
 
-const demo: Adapter = new AdapterImpl();
-console.log(demo.execute('sample'));`}
-  java={`interface Adapter {
-  String execute(String input);
-}
+// 3. The Adapter makes the Adaptee compatible with the Target's interface
+class Adapter implements Target {
+  private adaptee: Adaptee;
 
-class AdapterImpl implements Adapter {
-  public String execute(String input) {
-    return input.trim();
+  constructor(adaptee: Adaptee) {
+    this.adaptee = adaptee;
+  }
+
+  public request(): string {
+    // Translating the call
+    const result = this.adaptee.specificRequest().split('').reverse().join('');
+    return \`Adapter: (TRANSLATED) \${result}\`;
   }
 }
 
-Adapter demo = new AdapterImpl();
-System.out.println(demo.execute("sample"));`}
-  python={`class Adapter:
-    def execute(self, input: str) -> str:
-        raise NotImplementedError
+// 4. Client Code
+const adaptee = new Adaptee();
+console.log("Original: " + adaptee.specificRequest());
 
-class AdapterImpl(Adapter):
-    def execute(self, input: str) -> str:
-        return input.strip()
+const adapter = new Adapter(adaptee);
+console.log(adapter.request()); // Target-compatible call`}
+  java={`interface Target {
+  String request();
+}
 
-demo: Adapter = AdapterImpl()
-print(demo.execute("sample"))`}
+class Adaptee {
+  public String specificRequest() {
+    return ".eetpadA eht fo roivaheb laicepS";
+  }
+}
+
+class Adapter implements Target {
+  private Adaptee adaptee;
+
+  public Adapter(Adaptee adaptee) {
+    this.adaptee = adaptee;
+  }
+
+  @Override
+  public String request() {
+    String reversed = new StringBuilder(adaptee.specificRequest()).reverse().toString();
+    return "Adapter: (TRANSLATED) " + reversed;
+  }
+}
+
+public class Main {
+  public static void main(String[] args) {
+    Adaptee adaptee = new Adaptee();
+    System.out.println("Original: " + adaptee.specificRequest());
+    
+    Target adapter = new Adapter(adaptee);
+    System.out.println(adapter.request());
+  }
+}`}
+  python={`# 1. Target interface
+class Target:
+    def request(self) -> str:
+        return "Target: The default target's behavior."
+
+# 2. Adaptee (Incompatible interface)
+class Adaptee:
+    def specific_request(self) -> str:
+        return ".eetpadA eht fo roivaheb laicepS"
+
+# 3. Adapter
+class Adapter(Target):
+    def __init__(self, adaptee: Adaptee):
+        self.adaptee = adaptee
+
+    def request(self) -> str:
+        # Translating the request
+        translated = self.adaptee.specific_request()[::-1]
+        return f"Adapter: (TRANSLATED) {translated}"
+
+# 4. Client Code
+adaptee = Adaptee()
+print(f"Original: {adaptee.specific_request()}")
+
+adapter = Adapter(adaptee)
+print(adapter.request())`}
 />
 
 ## Gotchas
 
-- Copying the pattern mechanically without checking the problem constraints.
-- Ignoring object responsibilities, which usually leads to god classes.
+- **Adapter vs Decorator vs Proxy**: An Adapter changes the interface of an existing object. A Decorator enhances another object without changing its interface. A Proxy provides the same interface as the object it wraps.
+- **Over-engineering**: Sometimes it's simpler just to change the `Adaptee`'s code so that it matches your interface, rather than writing a whole new Adapter class, provided you own the `Adaptee` source code.

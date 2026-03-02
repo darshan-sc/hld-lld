@@ -1,64 +1,175 @@
 ## Concept
 
-Attach additional behavior dynamically around a base component. Keep the implementation minimal, but the boundaries explicit.
+The **Decorator** is a structural design pattern that lets you attach new behaviors to objects by placing these objects inside special wrapper objects that contain the behaviors.
+
+Because the wrapper implements the exact same interface as the wrapped object, you can stack as many wrappers as you want, dynamically altering an object's behavior at runtime without changing its code.
 
 ## When to use
 
-- When you want a clear separation of concerns in object interactions.
-- When interview discussions require trade-offs, not just syntax.
-- When you need an example that maps quickly to production design decisions.
+- When you need to add extra behaviors to objects at runtime without breaking the code that uses these objects.
+- When extending a class using inheritance is awkward, impossible, or leads to a combinatorial explosion of subclasses (e.g., `DarkScrollableAnimatedWindow`).
+- A canonical example is Java's `InputStream` (e.g., `new BufferedInputStream(new FileInputStream(file))`).
 
 ## Diagram
 
 <MermaidDiagram chart={`classDiagram
-  class DecoratorContext {
-    +execute(): void
+  class Notifier {
+    <<interface>>
+    +send(message)
   }
-  class DecoratorImplementation {
-    +execute(): void
+  
+  class EmailNotifier {
+    +send(message)
   }
-  DecoratorContext --> DecoratorImplementation`} />
+  
+  class BaseDecorator {
+    <<abstract>>
+    -Notifier wrappee
+    +send(message)
+  }
+  
+  class SMSDecorator {
+    +send(message)
+  }
+  
+  class SlackDecorator {
+    +send(message)
+  }
+  
+  Notifier <|.. EmailNotifier
+  Notifier <|.. BaseDecorator
+  BaseDecorator o-- Notifier : "Wraps"
+  BaseDecorator <|-- SMSDecorator
+  BaseDecorator <|-- SlackDecorator`} />
 
 ## Code
 
 <CodeBlock
-  typescript={`interface Decorator {
-  execute(input: string): string;
+  typescript={`// 1. The Component Interface
+interface Notifier {
+  send(message: string): void;
 }
 
-class DecoratorImpl implements Decorator {
-  execute(input: string): string {
-    return input.trim();
+// 2. Concrete Component (The base behavior)
+class EmailNotifier implements Notifier {
+  send(message: string): void {
+    console.log(\`Sending Email: \${message}\`);
   }
 }
 
-const demo: Decorator = new DecoratorImpl();
-console.log(demo.execute('sample'));`}
-  java={`interface Decorator {
-  String execute(String input);
-}
+// 3. Base Decorator (Delegates work to the wrapped component)
+abstract class NotifierDecorator implements Notifier {
+  constructor(protected wrappee: Notifier) {}
 
-class DecoratorImpl implements Decorator {
-  public String execute(String input) {
-    return input.trim();
+  send(message: string): void {
+    this.wrappee.send(message);
   }
 }
 
-Decorator demo = new DecoratorImpl();
-System.out.println(demo.execute("sample"));`}
-  python={`class Decorator:
-    def execute(self, input: str) -> str:
-        raise NotImplementedError
+// 4. Concrete Decorators (Add extra behavior before/after delegation)
+class SMSDecorator extends NotifierDecorator {
+  send(message: string): void {
+    super.send(message); // Forward to wrapped object
+    console.log(\`Sending SMS: \${message}\`);
+  }
+}
 
-class DecoratorImpl(Decorator):
-    def execute(self, input: str) -> str:
-        return input.strip()
+class SlackDecorator extends NotifierDecorator {
+  send(message: string): void {
+    super.send(message);
+    console.log(\`Sending Slack ping: \${message}\`);
+  }
+}
 
-demo: Decorator = DecoratorImpl()
-print(demo.execute("sample"))`}
+// 5. Client Code
+const stack1 = new EmailNotifier();
+const stack2 = new SMSDecorator(stack1);
+const stack3 = new SlackDecorator(stack2);
+
+// Client triggers the outermost wrapper, which cascades down
+stack3.send("Server is down!");`}
+  java={`interface Notifier {
+  void send(String message);
+}
+
+class EmailNotifier implements Notifier {
+  public void send(String message) {
+    System.out.println("Sending Email: " + message);
+  }
+}
+
+abstract class NotifierDecorator implements Notifier {
+  protected Notifier wrappee;
+  public NotifierDecorator(Notifier wrappee) {
+    this.wrappee = wrappee;
+  }
+  public void send(String message) {
+    wrappee.send(message);
+  }
+}
+
+class SMSDecorator extends NotifierDecorator {
+  public SMSDecorator(Notifier wrappee) { super(wrappee); }
+  @Override
+  public void send(String message) {
+    super.send(message);
+    System.out.println("Sending SMS: " + message);
+  }
+}
+
+class SlackDecorator extends NotifierDecorator {
+  public SlackDecorator(Notifier wrappee) { super(wrappee); }
+  @Override
+  public void send(String message) {
+    super.send(message);
+    System.out.println("Sending Slack ping: " + message);
+  }
+}
+
+public class Main {
+  public static void main(String[] args) {
+    Notifier stack = new SlackDecorator(new SMSDecorator(new EmailNotifier()));
+    stack.send("Server is down!");
+  }
+}`}
+  python={`from abc import ABC, abstractmethod
+
+# Component Interface
+class Notifier(ABC):
+    @abstractmethod
+    def send(self, message: str) -> None:
+        pass
+
+# Concrete Component
+class EmailNotifier(Notifier):
+    def send(self, message: str) -> None:
+        print(f"Sending Email: {message}")
+
+# Base Decorator
+class NotifierDecorator(Notifier):
+    def __init__(self, wrappee: Notifier):
+        self._wrappee = wrappee
+
+    def send(self, message: str) -> None:
+        self._wrappee.send(message)
+
+# Concrete Decorators
+class SMSDecorator(NotifierDecorator):
+    def send(self, message: str) -> None:
+        super().send(message)
+        print(f"Sending SMS: {message}")
+
+class SlackDecorator(NotifierDecorator):
+    def send(self, message: str) -> None:
+        super().send(message)
+        print(f"Sending Slack ping: {message}")
+
+# Client Code
+stack = SlackDecorator(SMSDecorator(EmailNotifier()))
+stack.send("Server is down!")`}
 />
 
 ## Gotchas
 
-- Copying the pattern mechanically without checking the problem constraints.
-- Ignoring object responsibilities, which usually leads to god classes.
+- **Initialization Hell**: Initializing a deeply nested decorated object can be verbose and look ugly (`new A(new B(new C(new D())))`). This is usually mitigated by combining the Decorator with a Builder or a Factory.
+- **Order Dependency**: The order in which you wrap the decorators can sometimes affect behavior in unexpected ways. Design your decorators so their order doesn't matter, if possible.
