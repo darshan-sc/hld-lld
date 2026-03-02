@@ -1,0 +1,80 @@
+## Concept
+
+Manage rider-driver matching and trip state progression. Keep the implementation minimal, but the boundaries explicit.
+
+## When to use
+
+- When you want a clear separation of concerns in object interactions.
+- When interview discussions require trade-offs, not just syntax.
+- When you need an example that maps quickly to production design decisions.
+
+## Diagram
+
+<MermaidDiagram chart={`classDiagram
+  class RideSharingUberLyftController
+  class RideSharingUberLyftService
+  class RideSharingUberLyftRepository
+  RideSharingUberLyftController --> RideSharingUberLyftService
+  RideSharingUberLyftService --> RideSharingUberLyftRepository`} />
+
+## Code
+
+<CodeBlock
+  typescript={`interface RideSharingUberLyftRequest {
+  id: string;
+}
+
+class RideSharingUberLyftService {
+  handle(request: RideSharingUberLyftRequest) {
+    // 1) validate request
+    // 2) apply domain rules
+    // 3) persist and publish events
+    return { status: 'ok', requestId: request.id };
+  }
+}`}
+  java={`class RideSharingUberLyftRequest {
+  String id;
+
+  RideSharingUberLyftRequest(String id) {
+    this.id = id;
+  }
+}
+
+class RideSharingUberLyftService {
+  String handle(RideSharingUberLyftRequest request) {
+    return "ok:" + request.id;
+  }
+}`}
+  python={`class RideSharingUberLyftRequest:
+  def __init__(self, request_id: str) -> None:
+    self.id = request_id
+
+class RideSharingUberLyftService:
+  def handle(self, request: RideSharingUberLyftRequest) -> dict[str, str]:
+    # 1) validate request
+    # 2) apply domain rules
+    # 3) persist and publish events
+    return {"status": "ok", "request_id": request.id}`}
+/>
+
+## Requirements
+
+- Clarify functional flows and error paths before class design.
+- Identify scale assumptions and consistency requirements up front.
+
+## Entities / Classes
+
+- RideSharingUberLyftController: orchestration and request handling.
+- RideSharingUberLyftService: core business logic.
+- RideSharingUberLyftRepository: persistence boundary.
+
+## Key Methods
+
+- create() or handle() for command-style workflows.
+- validate() for business and state checks.
+- notify() for observer/event style side effects.
+
+## Gotchas
+
+- Starting with classes before extracting requirements and invariants.
+- Mixing orchestration concerns with domain entities.

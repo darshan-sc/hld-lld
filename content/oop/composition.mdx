@@ -1,0 +1,54 @@
+## Concept
+
+Assemble behaviors from components to avoid rigid class hierarchies. Keep the implementation minimal, but the boundaries explicit.
+
+## When to use
+
+- When you want a clear separation of concerns in object interactions.
+- When interview discussions require trade-offs, not just syntax.
+- When you need an example that maps quickly to production design decisions.
+
+## Diagram
+
+<MermaidDiagram chart={`classDiagram
+  class CompositionoverInheritanceContext {
+    +execute(): void
+  }
+  class CompositionoverInheritanceImplementation {
+    +execute(): void
+  }
+  CompositionoverInheritanceContext --> CompositionoverInheritanceImplementation`} />
+
+## Code
+
+<CodeBlock
+  typescript={`interface CompositionoverInheritance {
+  execute(input: string): string;
+}
+
+class CompositionoverInheritanceImpl implements CompositionoverInheritance {
+  execute(input: string): string {
+    return input.trim();
+  }
+}
+
+const demo: CompositionoverInheritance = new CompositionoverInheritanceImpl();
+console.log(demo.execute('sample'));`}
+  java={`interface CompositionoverInheritance {
+  String execute(String input);
+}
+
+class CompositionoverInheritanceImpl implements CompositionoverInheritance {
+  public String execute(String input) {
+    return input.trim();
+  }
+}
+
+CompositionoverInheritance demo = new CompositionoverInheritanceImpl();
+System.out.println(demo.execute("sample"));`}
+/>
+
+## Gotchas
+
+- Copying the pattern mechanically without checking the problem constraints.
+- Ignoring object responsibilities, which usually leads to god classes.

@@ -1,0 +1,54 @@
+## Concept
+
+Construct complex objects in steps with optional configurations. Keep the implementation minimal, but the boundaries explicit.
+
+## When to use
+
+- When you want a clear separation of concerns in object interactions.
+- When interview discussions require trade-offs, not just syntax.
+- When you need an example that maps quickly to production design decisions.
+
+## Diagram
+
+<MermaidDiagram chart={`classDiagram
+  class BuilderContext {
+    +execute(): void
+  }
+  class BuilderImplementation {
+    +execute(): void
+  }
+  BuilderContext --> BuilderImplementation`} />
+
+## Code
+
+<CodeBlock
+  typescript={`interface Builder {
+  execute(input: string): string;
+}
+
+class BuilderImpl implements Builder {
+  execute(input: string): string {
+    return input.trim();
+  }
+}
+
+const demo: Builder = new BuilderImpl();
+console.log(demo.execute('sample'));`}
+  java={`interface Builder {
+  String execute(String input);
+}
+
+class BuilderImpl implements Builder {
+  public String execute(String input) {
+    return input.trim();
+  }
+}
+
+Builder demo = new BuilderImpl();
+System.out.println(demo.execute("sample"));`}
+/>
+
+## Gotchas
+
+- Copying the pattern mechanically without checking the problem constraints.
+- Ignoring object responsibilities, which usually leads to god classes.

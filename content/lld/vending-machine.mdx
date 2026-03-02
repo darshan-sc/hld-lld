@@ -1,0 +1,80 @@
+## Concept
+
+Implement inventory checks, payment flow, and dispensing states. Keep the implementation minimal, but the boundaries explicit.
+
+## When to use
+
+- When you want a clear separation of concerns in object interactions.
+- When interview discussions require trade-offs, not just syntax.
+- When you need an example that maps quickly to production design decisions.
+
+## Diagram
+
+<MermaidDiagram chart={`classDiagram
+  class VendingMachineController
+  class VendingMachineService
+  class VendingMachineRepository
+  VendingMachineController --> VendingMachineService
+  VendingMachineService --> VendingMachineRepository`} />
+
+## Code
+
+<CodeBlock
+  typescript={`interface VendingMachineRequest {
+  id: string;
+}
+
+class VendingMachineService {
+  handle(request: VendingMachineRequest) {
+    // 1) validate request
+    // 2) apply domain rules
+    // 3) persist and publish events
+    return { status: 'ok', requestId: request.id };
+  }
+}`}
+  java={`class VendingMachineRequest {
+  String id;
+
+  VendingMachineRequest(String id) {
+    this.id = id;
+  }
+}
+
+class VendingMachineService {
+  String handle(VendingMachineRequest request) {
+    return "ok:" + request.id;
+  }
+}`}
+  python={`class VendingMachineRequest:
+  def __init__(self, request_id: str) -> None:
+    self.id = request_id
+
+class VendingMachineService:
+  def handle(self, request: VendingMachineRequest) -> dict[str, str]:
+    # 1) validate request
+    # 2) apply domain rules
+    # 3) persist and publish events
+    return {"status": "ok", "request_id": request.id}`}
+/>
+
+## Requirements
+
+- Clarify functional flows and error paths before class design.
+- Identify scale assumptions and consistency requirements up front.
+
+## Entities / Classes
+
+- VendingMachineController: orchestration and request handling.
+- VendingMachineService: core business logic.
+- VendingMachineRepository: persistence boundary.
+
+## Key Methods
+
+- create() or handle() for command-style workflows.
+- validate() for business and state checks.
+- notify() for observer/event style side effects.
+
+## Gotchas
+
+- Starting with classes before extracting requirements and invariants.
+- Mixing orchestration concerns with domain entities.

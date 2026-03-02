@@ -1,0 +1,54 @@
+## Concept
+
+Reuse behavior with parent-child relationships where IS-A truly fits. Keep the implementation minimal, but the boundaries explicit.
+
+## When to use
+
+- When you want a clear separation of concerns in object interactions.
+- When interview discussions require trade-offs, not just syntax.
+- When you need an example that maps quickly to production design decisions.
+
+## Diagram
+
+<MermaidDiagram chart={`classDiagram
+  class InheritanceContext {
+    +execute(): void
+  }
+  class InheritanceImplementation {
+    +execute(): void
+  }
+  InheritanceContext --> InheritanceImplementation`} />
+
+## Code
+
+<CodeBlock
+  typescript={`interface Inheritance {
+  execute(input: string): string;
+}
+
+class InheritanceImpl implements Inheritance {
+  execute(input: string): string {
+    return input.trim();
+  }
+}
+
+const demo: Inheritance = new InheritanceImpl();
+console.log(demo.execute('sample'));`}
+  java={`interface Inheritance {
+  String execute(String input);
+}
+
+class InheritanceImpl implements Inheritance {
+  public String execute(String input) {
+    return input.trim();
+  }
+}
+
+Inheritance demo = new InheritanceImpl();
+System.out.println(demo.execute("sample"));`}
+/>
+
+## Gotchas
+
+- Copying the pattern mechanically without checking the problem constraints.
+- Ignoring object responsibilities, which usually leads to god classes.

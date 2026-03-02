@@ -1,0 +1,80 @@
+## Concept
+
+Design entry/exit, slot assignment, and pricing for a parking system. Keep the implementation minimal, but the boundaries explicit.
+
+## When to use
+
+- When you want a clear separation of concerns in object interactions.
+- When interview discussions require trade-offs, not just syntax.
+- When you need an example that maps quickly to production design decisions.
+
+## Diagram
+
+<MermaidDiagram chart={`classDiagram
+  class ParkingLotController
+  class ParkingLotService
+  class ParkingLotRepository
+  ParkingLotController --> ParkingLotService
+  ParkingLotService --> ParkingLotRepository`} />
+
+## Code
+
+<CodeBlock
+  typescript={`interface ParkingLotRequest {
+  id: string;
+}
+
+class ParkingLotService {
+  handle(request: ParkingLotRequest) {
+    // 1) validate request
+    // 2) apply domain rules
+    // 3) persist and publish events
+    return { status: 'ok', requestId: request.id };
+  }
+}`}
+  java={`class ParkingLotRequest {
+  String id;
+
+  ParkingLotRequest(String id) {
+    this.id = id;
+  }
+}
+
+class ParkingLotService {
+  String handle(ParkingLotRequest request) {
+    return "ok:" + request.id;
+  }
+}`}
+  python={`class ParkingLotRequest:
+  def __init__(self, request_id: str) -> None:
+    self.id = request_id
+
+class ParkingLotService:
+  def handle(self, request: ParkingLotRequest) -> dict[str, str]:
+    # 1) validate request
+    # 2) apply domain rules
+    # 3) persist and publish events
+    return {"status": "ok", "request_id": request.id}`}
+/>
+
+## Requirements
+
+- Clarify functional flows and error paths before class design.
+- Identify scale assumptions and consistency requirements up front.
+
+## Entities / Classes
+
+- ParkingLotController: orchestration and request handling.
+- ParkingLotService: core business logic.
+- ParkingLotRepository: persistence boundary.
+
+## Key Methods
+
+- create() or handle() for command-style workflows.
+- validate() for business and state checks.
+- notify() for observer/event style side effects.
+
+## Gotchas
+
+- Starting with classes before extracting requirements and invariants.
+- Mixing orchestration concerns with domain entities.

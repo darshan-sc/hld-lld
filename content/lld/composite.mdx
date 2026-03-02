@@ -1,0 +1,54 @@
+## Concept
+
+Treat leaf nodes and object trees through one uniform API. Keep the implementation minimal, but the boundaries explicit.
+
+## When to use
+
+- When you want a clear separation of concerns in object interactions.
+- When interview discussions require trade-offs, not just syntax.
+- When you need an example that maps quickly to production design decisions.
+
+## Diagram
+
+<MermaidDiagram chart={`classDiagram
+  class CompositeContext {
+    +execute(): void
+  }
+  class CompositeImplementation {
+    +execute(): void
+  }
+  CompositeContext --> CompositeImplementation`} />
+
+## Code
+
+<CodeBlock
+  typescript={`interface Composite {
+  execute(input: string): string;
+}
+
+class CompositeImpl implements Composite {
+  execute(input: string): string {
+    return input.trim();
+  }
+}
+
+const demo: Composite = new CompositeImpl();
+console.log(demo.execute('sample'));`}
+  java={`interface Composite {
+  String execute(String input);
+}
+
+class CompositeImpl implements Composite {
+  public String execute(String input) {
+    return input.trim();
+  }
+}
+
+Composite demo = new CompositeImpl();
+System.out.println(demo.execute("sample"));`}
+/>
+
+## Gotchas
+
+- Copying the pattern mechanically without checking the problem constraints.
+- Ignoring object responsibilities, which usually leads to god classes.

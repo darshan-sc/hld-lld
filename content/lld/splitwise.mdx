@@ -1,0 +1,80 @@
+## Concept
+
+Track shared expenses and compute settlements using split strategies. Keep the implementation minimal, but the boundaries explicit.
+
+## When to use
+
+- When you want a clear separation of concerns in object interactions.
+- When interview discussions require trade-offs, not just syntax.
+- When you need an example that maps quickly to production design decisions.
+
+## Diagram
+
+<MermaidDiagram chart={`classDiagram
+  class SplitwiseController
+  class SplitwiseService
+  class SplitwiseRepository
+  SplitwiseController --> SplitwiseService
+  SplitwiseService --> SplitwiseRepository`} />
+
+## Code
+
+<CodeBlock
+  typescript={`interface SplitwiseRequest {
+  id: string;
+}
+
+class SplitwiseService {
+  handle(request: SplitwiseRequest) {
+    // 1) validate request
+    // 2) apply domain rules
+    // 3) persist and publish events
+    return { status: 'ok', requestId: request.id };
+  }
+}`}
+  java={`class SplitwiseRequest {
+  String id;
+
+  SplitwiseRequest(String id) {
+    this.id = id;
+  }
+}
+
+class SplitwiseService {
+  String handle(SplitwiseRequest request) {
+    return "ok:" + request.id;
+  }
+}`}
+  python={`class SplitwiseRequest:
+  def __init__(self, request_id: str) -> None:
+    self.id = request_id
+
+class SplitwiseService:
+  def handle(self, request: SplitwiseRequest) -> dict[str, str]:
+    # 1) validate request
+    # 2) apply domain rules
+    # 3) persist and publish events
+    return {"status": "ok", "request_id": request.id}`}
+/>
+
+## Requirements
+
+- Clarify functional flows and error paths before class design.
+- Identify scale assumptions and consistency requirements up front.
+
+## Entities / Classes
+
+- SplitwiseController: orchestration and request handling.
+- SplitwiseService: core business logic.
+- SplitwiseRepository: persistence boundary.
+
+## Key Methods
+
+- create() or handle() for command-style workflows.
+- validate() for business and state checks.
+- notify() for observer/event style side effects.
+
+## Gotchas
+
+- Starting with classes before extracting requirements and invariants.
+- Mixing orchestration concerns with domain entities.

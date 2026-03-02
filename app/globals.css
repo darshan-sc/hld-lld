@@ -1,0 +1,37 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 10% 10%, rgba(15, 118, 110, 0.12), transparent 34%),
+    radial-gradient(circle at 90% 0%, rgba(249, 115, 22, 0.12), transparent 32%),
+    #fcfaf5;
+  color: #1a1f2b;
+}
+
+.page-shell {
+  @apply mx-auto w-full max-w-6xl px-4 pb-20 pt-8 sm:px-6;
+}
+
+.topic-prose {
+  @apply leading-7 text-slate-700;
+}
+
+.topic-prose table {
+  @apply mt-4 w-full border-collapse overflow-hidden rounded-xl border border-slate-200;
+}
+
+.topic-prose th,
+.topic-prose td {
+  @apply border border-slate-200 px-3 py-2 text-left;
+}
+
+.topic-prose th {
+  @apply bg-slate-50 font-semibold text-slate-700;
+}

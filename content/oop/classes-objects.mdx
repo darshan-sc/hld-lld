@@ -1,0 +1,54 @@
+## Concept
+
+Understand how classes model entities and objects hold runtime state. Keep the implementation minimal, but the boundaries explicit.
+
+## When to use
+
+- When you want a clear separation of concerns in object interactions.
+- When interview discussions require trade-offs, not just syntax.
+- When you need an example that maps quickly to production design decisions.
+
+## Diagram
+
+<MermaidDiagram chart={`classDiagram
+  class ClassesObjectsContext {
+    +execute(): void
+  }
+  class ClassesObjectsImplementation {
+    +execute(): void
+  }
+  ClassesObjectsContext --> ClassesObjectsImplementation`} />
+
+## Code
+
+<CodeBlock
+  typescript={`interface ClassesObjects {
+  execute(input: string): string;
+}
+
+class ClassesObjectsImpl implements ClassesObjects {
+  execute(input: string): string {
+    return input.trim();
+  }
+}
+
+const demo: ClassesObjects = new ClassesObjectsImpl();
+console.log(demo.execute('sample'));`}
+  java={`interface ClassesObjects {
+  String execute(String input);
+}
+
+class ClassesObjectsImpl implements ClassesObjects {
+  public String execute(String input) {
+    return input.trim();
+  }
+}
+
+ClassesObjects demo = new ClassesObjectsImpl();
+System.out.println(demo.execute("sample"));`}
+/>
+
+## Gotchas
+
+- Copying the pattern mechanically without checking the problem constraints.
+- Ignoring object responsibilities, which usually leads to god classes.

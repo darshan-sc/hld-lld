@@ -1,0 +1,54 @@
+## Concept
+
+Delegate behavior to state objects as state transitions occur. Keep the implementation minimal, but the boundaries explicit.
+
+## When to use
+
+- When you want a clear separation of concerns in object interactions.
+- When interview discussions require trade-offs, not just syntax.
+- When you need an example that maps quickly to production design decisions.
+
+## Diagram
+
+<MermaidDiagram chart={`classDiagram
+  class StateContext {
+    +execute(): void
+  }
+  class StateImplementation {
+    +execute(): void
+  }
+  StateContext --> StateImplementation`} />
+
+## Code
+
+<CodeBlock
+  typescript={`interface State {
+  execute(input: string): string;
+}
+
+class StateImpl implements State {
+  execute(input: string): string {
+    return input.trim();
+  }
+}
+
+const demo: State = new StateImpl();
+console.log(demo.execute('sample'));`}
+  java={`interface State {
+  String execute(String input);
+}
+
+class StateImpl implements State {
+  public String execute(String input) {
+    return input.trim();
+  }
+}
+
+State demo = new StateImpl();
+System.out.println(demo.execute("sample"));`}
+/>
+
+## Gotchas
+
+- Copying the pattern mechanically without checking the problem constraints.
+- Ignoring object responsibilities, which usually leads to god classes.

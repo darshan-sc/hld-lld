@@ -1,0 +1,80 @@
+## Concept
+
+Design transaction flow with stateful operations and cash handling. Keep the implementation minimal, but the boundaries explicit.
+
+## When to use
+
+- When you want a clear separation of concerns in object interactions.
+- When interview discussions require trade-offs, not just syntax.
+- When you need an example that maps quickly to production design decisions.
+
+## Diagram
+
+<MermaidDiagram chart={`classDiagram
+  class ATMMachineController
+  class ATMMachineService
+  class ATMMachineRepository
+  ATMMachineController --> ATMMachineService
+  ATMMachineService --> ATMMachineRepository`} />
+
+## Code
+
+<CodeBlock
+  typescript={`interface ATMMachineRequest {
+  id: string;
+}
+
+class ATMMachineService {
+  handle(request: ATMMachineRequest) {
+    // 1) validate request
+    // 2) apply domain rules
+    // 3) persist and publish events
+    return { status: 'ok', requestId: request.id };
+  }
+}`}
+  java={`class ATMMachineRequest {
+  String id;
+
+  ATMMachineRequest(String id) {
+    this.id = id;
+  }
+}
+
+class ATMMachineService {
+  String handle(ATMMachineRequest request) {
+    return "ok:" + request.id;
+  }
+}`}
+  python={`class ATMMachineRequest:
+  def __init__(self, request_id: str) -> None:
+    self.id = request_id
+
+class ATMMachineService:
+  def handle(self, request: ATMMachineRequest) -> dict[str, str]:
+    # 1) validate request
+    # 2) apply domain rules
+    # 3) persist and publish events
+    return {"status": "ok", "request_id": request.id}`}
+/>
+
+## Requirements
+
+- Clarify functional flows and error paths before class design.
+- Identify scale assumptions and consistency requirements up front.
+
+## Entities / Classes
+
+- ATMMachineController: orchestration and request handling.
+- ATMMachineService: core business logic.
+- ATMMachineRepository: persistence boundary.
+
+## Key Methods
+
+- create() or handle() for command-style workflows.
+- validate() for business and state checks.
+- notify() for observer/event style side effects.
+
+## Gotchas
+
+- Starting with classes before extracting requirements and invariants.
+- Mixing orchestration concerns with domain entities.

@@ -1,0 +1,54 @@
+## Concept
+
+Broadcast state changes from publishers to subscribers. Keep the implementation minimal, but the boundaries explicit.
+
+## When to use
+
+- When you want a clear separation of concerns in object interactions.
+- When interview discussions require trade-offs, not just syntax.
+- When you need an example that maps quickly to production design decisions.
+
+## Diagram
+
+<MermaidDiagram chart={`classDiagram
+  class ObserverContext {
+    +execute(): void
+  }
+  class ObserverImplementation {
+    +execute(): void
+  }
+  ObserverContext --> ObserverImplementation`} />
+
+## Code
+
+<CodeBlock
+  typescript={`interface Observer {
+  execute(input: string): string;
+}
+
+class ObserverImpl implements Observer {
+  execute(input: string): string {
+    return input.trim();
+  }
+}
+
+const demo: Observer = new ObserverImpl();
+console.log(demo.execute('sample'));`}
+  java={`interface Observer {
+  String execute(String input);
+}
+
+class ObserverImpl implements Observer {
+  public String execute(String input) {
+    return input.trim();
+  }
+}
+
+Observer demo = new ObserverImpl();
+System.out.println(demo.execute("sample"));`}
+/>
+
+## Gotchas
+
+- Copying the pattern mechanically without checking the problem constraints.
+- Ignoring object responsibilities, which usually leads to god classes.

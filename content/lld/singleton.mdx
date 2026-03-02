@@ -1,0 +1,54 @@
+## Concept
+
+Guarantee one instance with a shared access point. Keep the implementation minimal, but the boundaries explicit.
+
+## When to use
+
+- When you want a clear separation of concerns in object interactions.
+- When interview discussions require trade-offs, not just syntax.
+- When you need an example that maps quickly to production design decisions.
+
+## Diagram
+
+<MermaidDiagram chart={`classDiagram
+  class SingletonContext {
+    +execute(): void
+  }
+  class SingletonImplementation {
+    +execute(): void
+  }
+  SingletonContext --> SingletonImplementation`} />
+
+## Code
+
+<CodeBlock
+  typescript={`interface Singleton {
+  execute(input: string): string;
+}
+
+class SingletonImpl implements Singleton {
+  execute(input: string): string {
+    return input.trim();
+  }
+}
+
+const demo: Singleton = new SingletonImpl();
+console.log(demo.execute('sample'));`}
+  java={`interface Singleton {
+  String execute(String input);
+}
+
+class SingletonImpl implements Singleton {
+  public String execute(String input) {
+    return input.trim();
+  }
+}
+
+Singleton demo = new SingletonImpl();
+System.out.println(demo.execute("sample"));`}
+/>
+
+## Gotchas
+
+- Copying the pattern mechanically without checking the problem constraints.
+- Ignoring object responsibilities, which usually leads to god classes.

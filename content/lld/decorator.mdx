@@ -1,0 +1,54 @@
+## Concept
+
+Attach additional behavior dynamically around a base component. Keep the implementation minimal, but the boundaries explicit.
+
+## When to use
+
+- When you want a clear separation of concerns in object interactions.
+- When interview discussions require trade-offs, not just syntax.
+- When you need an example that maps quickly to production design decisions.
+
+## Diagram
+
+<MermaidDiagram chart={`classDiagram
+  class DecoratorContext {
+    +execute(): void
+  }
+  class DecoratorImplementation {
+    +execute(): void
+  }
+  DecoratorContext --> DecoratorImplementation`} />
+
+## Code
+
+<CodeBlock
+  typescript={`interface Decorator {
+  execute(input: string): string;
+}
+
+class DecoratorImpl implements Decorator {
+  execute(input: string): string {
+    return input.trim();
+  }
+}
+
+const demo: Decorator = new DecoratorImpl();
+console.log(demo.execute('sample'));`}
+  java={`interface Decorator {
+  String execute(String input);
+}
+
+class DecoratorImpl implements Decorator {
+  public String execute(String input) {
+    return input.trim();
+  }
+}
+
+Decorator demo = new DecoratorImpl();
+System.out.println(demo.execute("sample"));`}
+/>
+
+## Gotchas
+
+- Copying the pattern mechanically without checking the problem constraints.
+- Ignoring object responsibilities, which usually leads to god classes.

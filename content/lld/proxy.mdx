@@ -1,0 +1,54 @@
+## Concept
+
+Control access, caching, or security in front of a target object. Keep the implementation minimal, but the boundaries explicit.
+
+## When to use
+
+- When you want a clear separation of concerns in object interactions.
+- When interview discussions require trade-offs, not just syntax.
+- When you need an example that maps quickly to production design decisions.
+
+## Diagram
+
+<MermaidDiagram chart={`classDiagram
+  class ProxyContext {
+    +execute(): void
+  }
+  class ProxyImplementation {
+    +execute(): void
+  }
+  ProxyContext --> ProxyImplementation`} />
+
+## Code
+
+<CodeBlock
+  typescript={`interface Proxy {
+  execute(input: string): string;
+}
+
+class ProxyImpl implements Proxy {
+  execute(input: string): string {
+    return input.trim();
+  }
+}
+
+const demo: Proxy = new ProxyImpl();
+console.log(demo.execute('sample'));`}
+  java={`interface Proxy {
+  String execute(String input);
+}
+
+class ProxyImpl implements Proxy {
+  public String execute(String input) {
+    return input.trim();
+  }
+}
+
+Proxy demo = new ProxyImpl();
+System.out.println(demo.execute("sample"));`}
+/>
+
+## Gotchas
+
+- Copying the pattern mechanically without checking the problem constraints.
+- Ignoring object responsibilities, which usually leads to god classes.
