@@ -47,12 +47,12 @@ class AdapterImpl implements Adapter {
 Adapter demo = new AdapterImpl();
 System.out.println(demo.execute("sample"));`}
   python={`class Adapter:
-  def execute(self, input: str) -> str:
-    raise NotImplementedError
+    def execute(self, input: str) -> str:
+        raise NotImplementedError
 
 class AdapterImpl(Adapter):
-  def execute(self, input: str) -> str:
-    return input.strip()
+    def execute(self, input: str) -> str:
+        return input.strip()
 
 demo: Adapter = AdapterImpl()
 print(demo.execute("sample"))`}

@@ -47,12 +47,12 @@ class CompositeImpl implements Composite {
 Composite demo = new CompositeImpl();
 System.out.println(demo.execute("sample"));`}
   python={`class Composite:
-  def execute(self, input: str) -> str:
-    raise NotImplementedError
+    def execute(self, input: str) -> str:
+        raise NotImplementedError
 
 class CompositeImpl(Composite):
-  def execute(self, input: str) -> str:
-    return input.strip()
+    def execute(self, input: str) -> str:
+        return input.strip()
 
 demo: Composite = CompositeImpl()
 print(demo.execute("sample"))`}

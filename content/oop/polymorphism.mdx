@@ -47,12 +47,12 @@ class PolymorphismImpl implements Polymorphism {
 Polymorphism demo = new PolymorphismImpl();
 System.out.println(demo.execute("sample"));`}
   python={`class Polymorphism:
-  def execute(self, input: str) -> str:
-    raise NotImplementedError
+    def execute(self, input: str) -> str:
+        raise NotImplementedError
 
 class PolymorphismImpl(Polymorphism):
-  def execute(self, input: str) -> str:
-    return input.strip()
+    def execute(self, input: str) -> str:
+        return input.strip()
 
 demo: Polymorphism = PolymorphismImpl()
 print(demo.execute("sample"))`}

@@ -47,12 +47,12 @@ class EncapsulationImpl implements Encapsulation {
 Encapsulation demo = new EncapsulationImpl();
 System.out.println(demo.execute("sample"));`}
   python={`class Encapsulation:
-  def execute(self, input: str) -> str:
-    raise NotImplementedError
+    def execute(self, input: str) -> str:
+        raise NotImplementedError
 
 class EncapsulationImpl(Encapsulation):
-  def execute(self, input: str) -> str:
-    return input.strip()
+    def execute(self, input: str) -> str:
+        return input.strip()
 
 demo: Encapsulation = EncapsulationImpl()
 print(demo.execute("sample"))`}

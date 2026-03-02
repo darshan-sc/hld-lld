@@ -47,12 +47,12 @@ class SingletonImpl implements Singleton {
 Singleton demo = new SingletonImpl();
 System.out.println(demo.execute("sample"));`}
   python={`class Singleton:
-  def execute(self, input: str) -> str:
-    raise NotImplementedError
+    def execute(self, input: str) -> str:
+        raise NotImplementedError
 
 class SingletonImpl(Singleton):
-  def execute(self, input: str) -> str:
-    return input.strip()
+    def execute(self, input: str) -> str:
+        return input.strip()
 
 demo: Singleton = SingletonImpl()
 print(demo.execute("sample"))`}

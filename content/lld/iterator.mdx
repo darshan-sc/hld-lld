@@ -47,12 +47,12 @@ class IteratorImpl implements Iterator {
 Iterator demo = new IteratorImpl();
 System.out.println(demo.execute("sample"));`}
   python={`class Iterator:
-  def execute(self, input: str) -> str:
-    raise NotImplementedError
+    def execute(self, input: str) -> str:
+        raise NotImplementedError
 
 class IteratorImpl(Iterator):
-  def execute(self, input: str) -> str:
-    return input.strip()
+    def execute(self, input: str) -> str:
+        return input.strip()
 
 demo: Iterator = IteratorImpl()
 print(demo.execute("sample"))`}

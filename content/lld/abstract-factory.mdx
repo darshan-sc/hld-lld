@@ -47,12 +47,12 @@ class AbstractFactoryImpl implements AbstractFactory {
 AbstractFactory demo = new AbstractFactoryImpl();
 System.out.println(demo.execute("sample"));`}
   python={`class AbstractFactory:
-  def execute(self, input: str) -> str:
-    raise NotImplementedError
+    def execute(self, input: str) -> str:
+        raise NotImplementedError
 
 class AbstractFactoryImpl(AbstractFactory):
-  def execute(self, input: str) -> str:
-    return input.strip()
+    def execute(self, input: str) -> str:
+        return input.strip()
 
 demo: AbstractFactory = AbstractFactoryImpl()
 print(demo.execute("sample"))`}

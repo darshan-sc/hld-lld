@@ -47,15 +47,15 @@ class RideSharingUberLyftService {
   }
 }`}
   python={`class RideSharingUberLyftRequest:
-  def __init__(self, request_id: str) -> None:
-    self.id = request_id
+    def __init__(self, request_id: str) -> None:
+        self.id = request_id
 
 class RideSharingUberLyftService:
-  def handle(self, request: RideSharingUberLyftRequest) -> dict[str, str]:
-    # 1) validate request
-    # 2) apply domain rules
-    # 3) persist and publish events
-    return {"status": "ok", "request_id": request.id}`}
+    def handle(self, request: RideSharingUberLyftRequest) -> dict[str, str]:
+        # 1) validate request
+        # 2) apply domain rules
+        # 3) persist and publish events
+        return {"status": "ok", "request_id": request.id}`}
 />
 
 ## Requirements

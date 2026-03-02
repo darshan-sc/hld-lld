@@ -47,12 +47,12 @@ class ProxyImpl implements Proxy {
 Proxy demo = new ProxyImpl();
 System.out.println(demo.execute("sample"));`}
   python={`class Proxy:
-  def execute(self, input: str) -> str:
-    raise NotImplementedError
+    def execute(self, input: str) -> str:
+        raise NotImplementedError
 
 class ProxyImpl(Proxy):
-  def execute(self, input: str) -> str:
-    return input.strip()
+    def execute(self, input: str) -> str:
+        return input.strip()
 
 demo: Proxy = ProxyImpl()
 print(demo.execute("sample"))`}

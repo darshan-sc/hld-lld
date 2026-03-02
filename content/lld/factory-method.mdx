@@ -47,12 +47,12 @@ class FactoryMethodImpl implements FactoryMethod {
 FactoryMethod demo = new FactoryMethodImpl();
 System.out.println(demo.execute("sample"));`}
   python={`class FactoryMethod:
-  def execute(self, input: str) -> str:
-    raise NotImplementedError
+    def execute(self, input: str) -> str:
+        raise NotImplementedError
 
 class FactoryMethodImpl(FactoryMethod):
-  def execute(self, input: str) -> str:
-    return input.strip()
+    def execute(self, input: str) -> str:
+        return input.strip()
 
 demo: FactoryMethod = FactoryMethodImpl()
 print(demo.execute("sample"))`}
