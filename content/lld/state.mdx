@@ -1,64 +1,212 @@
 ## Concept
 
-Delegate behavior to state objects as state transitions occur. Keep the implementation minimal, but the boundaries explicit.
+The **State** is a behavioral design pattern that allows an object to alter its behavior when its internal state changes. It appears as if the object changed its class.
+
+Instead of writing massive `if (state == X) { ... } else if (state == Y) { ... }` blocks inside a context class, you extract all state-specific behaviors into individual State classes. The original object delegates all the work to its current State object.
 
 ## When to use
 
-- When you want a clear separation of concerns in object interactions.
-- When interview discussions require trade-offs, not just syntax.
-- When you need an example that maps quickly to production design decisions.
+- When you have an object that behaves differently depending on its current state, the number of states is huge, and the state-specific code changes frequently.
+- To avoid massive conditionals (Giant Switch Statements) that control how the object behaves based on a state variable.
 
 ## Diagram
 
 <MermaidDiagram chart={`classDiagram
-  class StateContext {
-    +execute(): void
+  class VendingMachineContext {
+    -State state
+    +changeState(State)
+    +insertCoin()
+    +dispenseItem()
   }
-  class StateImplementation {
-    +execute(): void
+  
+  class State {
+    <<interface>>
+    +insertCoin()
+    +dispenseItem()
   }
-  StateContext --> StateImplementation`} />
+  
+  class IdleState {
+    +insertCoin()
+    +dispenseItem()
+  }
+  
+  class HasCoinState {
+    +insertCoin()
+    +dispenseItem()
+  }
+  
+  VendingMachineContext o-- State : "Delegates"
+  State <|.. IdleState
+  State <|.. HasCoinState`} />
 
 ## Code
 
 <CodeBlock
-  typescript={`interface State {
-  execute(input: string): string;
+  typescript={`// 1. The State Interface
+interface State {
+  insertCoin(): void;
+  dispenseItem(): void;
 }
 
-class StateImpl implements State {
-  execute(input: string): string {
-    return input.trim();
+// 2. The Context (Delegates behavior to current state)
+class VendingMachine {
+  private state: State;
+
+  constructor() {
+    this.state = new IdleState(this); // Initial state
+  }
+
+  public changeState(state: State): void {
+    this.state = state;
+  }
+
+  // Delegated Actions
+  public insertCoin(): void { this.state.insertCoin(); }
+  public dispenseItem(): void { this.state.dispenseItem(); }
+}
+
+// 3. Concrete States
+class IdleState implements State {
+  constructor(private machine: VendingMachine) {}
+
+  insertCoin(): void {
+    console.log("Coin accepted. Please select an item.");
+    // Transition to the next state!
+    this.machine.changeState(new HasCoinState(this.machine));
+  }
+
+  dispenseItem(): void {
+    console.log("Error: You must insert a coin first.");
   }
 }
 
-const demo: State = new StateImpl();
-console.log(demo.execute('sample'));`}
+class HasCoinState implements State {
+  constructor(private machine: VendingMachine) {}
+
+  insertCoin(): void {
+    console.log("Error: Coin already inserted. Select an item.");
+  }
+
+  dispenseItem(): void {
+    console.log("Item dispensed! Enjoy.");
+    // Transition back to idle
+    this.machine.changeState(new IdleState(this.machine));
+  }
+}
+
+// 4. Client Code
+const machine = new VendingMachine();
+
+machine.dispenseItem(); // Error: You must insert a coin first.
+machine.insertCoin();   // Coin accepted... -> State changes to HasCoinState
+machine.insertCoin();   // Error: Coin already inserted.
+machine.dispenseItem(); // Item dispensed! -> State changes back to IdleState`}
   java={`interface State {
-  String execute(String input);
+  void insertCoin();
+  void dispenseItem();
 }
 
-class StateImpl implements State {
-  public String execute(String input) {
-    return input.trim();
+class VendingMachine {
+  private State state;
+
+  public VendingMachine() {
+    state = new IdleState(this);
+  }
+  public void changeState(State state) { this.state = state; }
+
+  public void insertCoin() { state.insertCoin(); }
+  public void dispenseItem() { state.dispenseItem(); }
+}
+
+class IdleState implements State {
+  private VendingMachine machine;
+  public IdleState(VendingMachine m) { this.machine = m; }
+
+  public void insertCoin() {
+    System.out.println("Coin accepted.");
+    machine.changeState(new HasCoinState(machine));
+  }
+
+  public void dispenseItem() {
+    System.out.println("Insert coin first!");
   }
 }
 
-State demo = new StateImpl();
-System.out.println(demo.execute("sample"));`}
-  python={`class State:
-    def execute(self, input: str) -> str:
-        raise NotImplementedError
+class HasCoinState implements State {
+  private VendingMachine machine;
+  public HasCoinState(VendingMachine m) { this.machine = m; }
 
-class StateImpl(State):
-    def execute(self, input: str) -> str:
-        return input.strip()
+  public void insertCoin() {
+    System.out.println("Coin already inserted.");
+  }
 
-demo: State = StateImpl()
-print(demo.execute("sample"))`}
+  public void dispenseItem() {
+    System.out.println("Item dispensed!");
+    machine.changeState(new IdleState(machine));
+  }
+}
+
+public class Main {
+  public static void main(String[] args) {
+    VendingMachine machine = new VendingMachine();
+    machine.dispenseItem(); // Error
+    machine.insertCoin();   // Success
+    machine.dispenseItem(); // Success
+  }
+}`}
+  python={`from abc import ABC, abstractmethod
+
+# Interface
+class State(ABC):
+    @abstractmethod
+    def insert_coin(self) -> None: pass
+    @abstractmethod
+    def dispense_item(self) -> None: pass
+
+# Context
+class VendingMachine:
+    def __init__(self):
+        self.state = IdleState(self)
+        
+    def change_state(self, state: State) -> None:
+        self.state = state
+
+    def insert_coin(self) -> None:
+        self.state.insert_coin()
+        
+    def dispense_item(self) -> None:
+        self.state.dispense_item()
+
+# Concrete States
+class IdleState(State):
+    def __init__(self, machine: VendingMachine):
+        self.machine = machine
+
+    def insert_coin(self) -> None:
+        print("Coin accepted.")
+        self.machine.change_state(HasCoinState(self.machine))
+
+    def dispense_item(self) -> None:
+        print("Insert coin first!")
+
+class HasCoinState(State):
+    def __init__(self, machine: VendingMachine):
+        self.machine = machine
+
+    def insert_coin(self) -> None:
+        print("Coin already inserted.")
+
+    def dispense_item(self) -> None:
+        print("Item dispensed!")
+        self.machine.change_state(IdleState(self.machine))
+
+machine = VendingMachine()
+machine.dispense_item() # Insert coin first!
+machine.insert_coin()   # Coin accepted. 
+machine.dispense_item() # Item dispensed!`}
 />
 
 ## Gotchas
 
-- Copying the pattern mechanically without checking the problem constraints.
-- Ignoring object responsibilities, which usually leads to god classes.
+- **State vs Strategy**: They look identical (Context delegates to Interface). The difference is intent. In Strategy, the client determines which algorithm to use, and strategies usually aren't aware of each other. In State, the states *are* aware of each other and usually trigger transitions between themselves autonomously.
+- **Tight Coupling**: Allowing States to transition themselves couples the State classes to each other. Alternately, the Context can handle the transitions (acting as a central State Machine orchestrator), but this often requires large `switch` statements, bringing you back to the problem you were trying to solve.

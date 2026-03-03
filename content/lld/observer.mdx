@@ -1,64 +1,226 @@
 ## Concept
 
-Broadcast state changes from publishers to subscribers. Keep the implementation minimal, but the boundaries explicit.
+The **Observer** is a behavioral design pattern that lets you define a subscription mechanism to notify multiple objects about any events that happen to the object they're observing.
+
+Often known as "Pub-Sub" (Publisher-Subscriber), it's heavily used in Event-Driven systems.
 
 ## When to use
 
-- When you want a clear separation of concerns in object interactions.
-- When interview discussions require trade-offs, not just syntax.
-- When you need an example that maps quickly to production design decisions.
+- When changes to the state of one object may require changing other objects, and the actual set of objects is unknown beforehand or changes dynamically.
+- When you want to decouple the core component (Publisher) from the dependent components (Subscribers) so that adding new subscribers doesn't require modifying the publisher.
+- Extremely common in UI frameworks (e.g., a Button click event notifying multiple listener functions).
 
 ## Diagram
 
 <MermaidDiagram chart={`classDiagram
-  class ObserverContext {
-    +execute(): void
+  class Subject {
+    <<interface>>
+    +attach(Observer)
+    +detach(Observer)
+    +notify()
   }
-  class ObserverImplementation {
-    +execute(): void
+  
+  class WeatherStation {
+    -temperature
+    -Observer[] observers
+    +setTemperature(temp)
+    +notify()
   }
-  ObserverContext --> ObserverImplementation`} />
+  
+  class Observer {
+    <<interface>>
+    +update()
+  }
+  
+  class PhoneDisplay {
+    +update()
+  }
+  
+  class TVDisplay {
+    +update()
+  }
+  
+  Subject <|.. WeatherStation
+  Observer <|.. PhoneDisplay
+  Observer <|.. TVDisplay
+  WeatherStation o-- Observer : "Notifies >" `} />
 
 ## Code
 
 <CodeBlock
-  typescript={`interface Observer {
-  execute(input: string): string;
+  typescript={`// 1. Observer Interface
+interface Observer {
+  update(temperature: number): void;
 }
 
-class ObserverImpl implements Observer {
-  execute(input: string): string {
-    return input.trim();
+// 2. Subject Interface (Publisher)
+interface Subject {
+  attach(observer: Observer): void;
+  detach(observer: Observer): void;
+  notify(): void;
+}
+
+// 3. Concrete Subject
+class WeatherStation implements Subject {
+  private observers: Observer[] = [];
+  private temperature: number = 0;
+
+  attach(observer: Observer): void {
+    const isExist = this.observers.includes(observer);
+    if (!isExist) this.observers.push(observer);
+  }
+
+  detach(observer: Observer): void {
+    const observerIndex = this.observers.indexOf(observer);
+    if (observerIndex !== -1) {
+      this.observers.splice(observerIndex, 1);
+    }
+  }
+
+  notify(): void {
+    console.log("WeatherStation: Notifying observers...");
+    for (const observer of this.observers) {
+      observer.update(this.temperature);
+    }
+  }
+
+  setTemperature(temp: number): void {
+    console.log(\`\nWeatherStation: Temperature changed to \${temp}\`);
+    this.temperature = temp;
+    this.notify();
   }
 }
 
-const demo: Observer = new ObserverImpl();
-console.log(demo.execute('sample'));`}
-  java={`interface Observer {
-  String execute(String input);
-}
-
-class ObserverImpl implements Observer {
-  public String execute(String input) {
-    return input.trim();
+// 4. Concrete Observers (Subscribers)
+class PhoneDisplay implements Observer {
+  update(temperature: number): void {
+    console.log(\`Phone: Alert! Temperature is now \${temperature} degrees\`);
   }
 }
 
-Observer demo = new ObserverImpl();
-System.out.println(demo.execute("sample"));`}
-  python={`class Observer:
-    def execute(self, input: str) -> str:
-        raise NotImplementedError
+class TVDisplay implements Observer {
+  update(temperature: number): void {
+    console.log(\`TV Banner: Current temp: \${temperature}\`);
+  }
+}
 
-class ObserverImpl(Observer):
-    def execute(self, input: str) -> str:
-        return input.strip()
+// 5. Client Code
+const weatherStation = new WeatherStation();
+const phone = new PhoneDisplay();
+const tv = new TVDisplay();
 
-demo: Observer = ObserverImpl()
-print(demo.execute("sample"))`}
+weatherStation.attach(phone);
+weatherStation.attach(tv);
+
+weatherStation.setTemperature(25);
+weatherStation.detach(tv);
+weatherStation.setTemperature(30);`}
+  java={`import java.util.ArrayList;
+import java.util.List;
+
+interface Observer {
+  void update(int temperature);
+}
+
+interface Subject {
+  void attach(Observer o);
+  void detach(Observer o);
+  void notifyObservers();
+}
+
+class WeatherStation implements Subject {
+  private List<Observer> observers = new ArrayList<>();
+  private int temperature;
+
+  public void attach(Observer o) { observers.add(o); }
+  public void detach(Observer o) { observers.remove(o); }
+
+  public void setTemperature(int temp) {
+    this.temperature = temp;
+    notifyObservers();
+  }
+
+  public void notifyObservers() {
+    for (Observer o : observers) {
+      o.update(temperature);
+    }
+  }
+}
+
+class PhoneDisplay implements Observer {
+  public void update(int temperature) {
+    System.out.println("Phone: Temp is " + temperature);
+  }
+}
+
+class TVDisplay implements Observer {
+  public void update(int temperature) {
+    System.out.println("TV: Temp is " + temperature);
+  }
+}
+
+public class Main {
+  public static void main(String[] args) {
+    WeatherStation station = new WeatherStation();
+    Observer phone = new PhoneDisplay();
+    Observer tv = new TVDisplay();
+
+    station.attach(phone);
+    station.attach(tv);
+
+    station.setTemperature(25);
+  }
+}`}
+  python={`from abc import ABC, abstractmethod
+
+# Observer
+class Observer(ABC):
+    @abstractmethod
+    def update(self, temperature: int) -> None: pass
+
+# Subject
+class Subject(ABC):
+    @abstractmethod
+    def attach(self, observer: Observer) -> None: pass
+    @abstractmethod
+    def detach(self, observer: Observer) -> None: pass
+    @abstractmethod
+    def notify(self) -> None: pass
+
+class WeatherStation(Subject):
+    def __init__(self):
+        self._observers = []
+        self._temperature = 0
+
+    def attach(self, observer: Observer) -> None:
+        if observer not in self._observers:
+            self._observers.append(observer)
+
+    def detach(self, observer: Observer) -> None:
+        self._observers.remove(observer)
+
+    def set_temperature(self, temp: int) -> None:
+        self._temperature = temp
+        self.notify()
+
+    def notify(self) -> None:
+        for observer in self._observers:
+            observer.update(self._temperature)
+
+# Concrete Observers
+class PhoneDisplay(Observer):
+    def update(self, temperature: int) -> None:
+        print(f"Phone: Temp is {temperature}")
+
+# Client
+station = WeatherStation()
+phone = PhoneDisplay()
+
+station.attach(phone)
+station.set_temperature(75)`}
 />
 
 ## Gotchas
 
-- Copying the pattern mechanically without checking the problem constraints.
-- Ignoring object responsibilities, which usually leads to god classes.
+- **Memory Leaks (The Lapsed Listener Problem)**: If an observer registers with a subject, but the observer is later discarded by the client without calling `detach()`, the subject still holds a strong reference to the observer in its array. This prevents the garbage collector from freeing the memory, causing a classic memory leak in long-running apps.
+- **Update Cascades / Cycles**: Be extremely careful if observers in turn update other subjects. This can cause infinite loops or massive chain-reaction updates (Event Cascades) that cripple performance.

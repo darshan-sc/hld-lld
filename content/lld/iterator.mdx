@@ -1,64 +1,208 @@
 ## Concept
 
-Traverse collections without exposing their internal layout. Keep the implementation minimal, but the boundaries explicit.
+The **Iterator** is a behavioral design pattern that lets you traverse elements of a collection without exposing its underlying representation (list, stack, tree, etc.).
+
+By extracting the traversal behavior into a separate iterator object, you keep the collection's primary responsibility focused on storing data, and allow clients to iterate through the items using a standardized interface.
 
 ## When to use
 
-- When you want a clear separation of concerns in object interactions.
-- When interview discussions require trade-offs, not just syntax.
-- When you need an example that maps quickly to production design decisions.
+- When your collection has a complex data structure under the hood, but you want to hide its complexity from clients (e.g., iterating cleanly over a complex graph or tree).
+- To reduce duplication of traversal code across your app.
+- When you want your code to be able to traverse different data structures using the exact same code, polymorphic iteration.
 
 ## Diagram
 
 <MermaidDiagram chart={`classDiagram
-  class IteratorContext {
-    +execute(): void
+  class IterableCollection {
+    <<interface>>
+    +createIterator() Iterator
   }
-  class IteratorImplementation {
-    +execute(): void
+  
+  class BookCollection {
+    +createIterator() Iterator
   }
-  IteratorContext --> IteratorImplementation`} />
+  
+  class Iterator {
+    <<interface>>
+    +hasNext() boolean
+    +next() Object
+  }
+  
+  class BookIterator {
+    -BookCollection collection
+    -int currentIndex
+    +hasNext() boolean
+    +next() Object
+  }
+  
+  IterableCollection <|.. BookCollection
+  Iterator <|.. BookIterator
+  BookCollection ..> BookIterator : "Creates"
+  BookIterator --> BookCollection : "Traverses"`} />
 
 ## Code
 
 <CodeBlock
-  typescript={`interface Iterator {
-  execute(input: string): string;
+  typescript={`// 1. The Iterator Interface
+interface Iterator<T> {
+  current(): T;
+  next(): T;
+  hasNext(): boolean;
 }
 
-class IteratorImpl implements Iterator {
-  execute(input: string): string {
-    return input.trim();
+// 2. The Aggregate (Collection) Interface
+interface Aggregator<T> {
+  getIterator(): Iterator<T>;
+}
+
+// 3. Concrete Collection
+class BookCollection implements Aggregator<string> {
+  private items: string[] = [];
+
+  getItems(): string[] { return this.items; }
+  addItem(item: string): void { this.items.push(item); }
+
+  getIterator(): Iterator<string> {
+    return new AlphabeticalOrderIterator(this);
   }
 }
 
-const demo: Iterator = new IteratorImpl();
-console.log(demo.execute('sample'));`}
-  java={`interface Iterator {
-  String execute(String input);
-}
+// 4. Concrete Iterator
+class AlphabeticalOrderIterator implements Iterator<string> {
+  private collection: BookCollection;
+  private position: number = 0;
+  // A sorted copy of the elements to iterate over alphabetically
+  private cache: string[] = [];
 
-class IteratorImpl implements Iterator {
-  public String execute(String input) {
-    return input.trim();
+  constructor(collection: BookCollection) {
+    this.collection = collection;
+    this.cache = [...collection.getItems()].sort();
+  }
+
+  current(): string { return this.cache[this.position]; }
+
+  next(): string {
+    const item = this.cache[this.position];
+    this.position++;
+    return item;
+  }
+
+  hasNext(): boolean {
+    return this.position < this.cache.length;
   }
 }
 
-Iterator demo = new IteratorImpl();
-System.out.println(demo.execute("sample"));`}
-  python={`class Iterator:
-    def execute(self, input: str) -> str:
-        raise NotImplementedError
+// 5. Client Code
+const library = new BookCollection();
+library.addItem("The Hobbit");
+library.addItem("A Brief History of Time");
+library.addItem("Zend Framework in Action");
 
-class IteratorImpl(Iterator):
-    def execute(self, input: str) -> str:
-        return input.strip()
+const iterator = library.getIterator();
 
-demo: Iterator = IteratorImpl()
-print(demo.execute("sample"))`}
+// Notice the client doesn't know it's a List, Array, Tree, etc.
+while (iterator.hasNext()) {
+  console.log(iterator.next());
+}`}
+  java={`import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+interface CustomIterator<T> {
+  boolean hasNext();
+  T next();
+}
+
+interface IterableCollection<T> {
+  CustomIterator<T> createIterator();
+}
+
+class BookCollection implements IterableCollection<String> {
+  private List<String> books = new ArrayList<>();
+
+  public void add(String book) { books.add(book); }
+  public List<String> getBooks() { return books; }
+
+  @Override
+  public CustomIterator<String> createIterator() {
+    return new AlphabeticalIterator(this);
+  }
+}
+
+class AlphabeticalIterator implements CustomIterator<String> {
+  private List<String> cache;
+  private int currentPosition = 0;
+
+  public AlphabeticalIterator(BookCollection collection) {
+    this.cache = new ArrayList<>(collection.getBooks());
+    Collections.sort(this.cache);
+  }
+
+  @Override
+  public boolean hasNext() {
+    return currentPosition < cache.size();
+  }
+
+  @Override
+  public String next() {
+    return cache.get(currentPosition++);
+  }
+}
+
+public class Main {
+  public static void main(String[] args) {
+    BookCollection library = new BookCollection();
+    library.add("Zebra Biology");
+    library.add("Apple Cultivation");
+
+    CustomIterator<String> iterator = library.createIterator();
+    while (iterator.hasNext()) {
+      System.out.println(iterator.next());
+    }
+  }
+}`}
+  python={`from __future__ import annotations
+from collections.abc import Iterable, Iterator
+
+class AlphabeticalOrderIterator(Iterator):
+    def __init__(self, collection: BookCollection):
+        self._collection = collection
+        self._position = 0
+        # Sorting the elements internally for alphabetical iteration
+        self._cache = sorted(collection.items)
+
+    def __next__(self):
+        try:
+            value = self._cache[self._position]
+            self._position += 1
+            return value
+        except IndexError:
+            # Python standard for ending iteration
+            raise StopIteration()
+
+class BookCollection(Iterable):
+    def __init__(self):
+        self.items = []
+
+    def add(self, item: str):
+        self.items.append(item)
+
+    def __iter__(self) -> AlphabeticalOrderIterator:
+        # In python, returning an iterator from __iter__ implements the Generator protocol
+        return AlphabeticalOrderIterator(self)
+
+# Client Code
+library = BookCollection()
+library.add("Zebra Biology")
+library.add("Apple Cultivation")
+library.add("Mammoths")
+
+# Python's 'for in' loop intrinsically works with the Iterator pattern!
+for book in library:
+    print(book)`}
 />
 
 ## Gotchas
 
-- Copying the pattern mechanically without checking the problem constraints.
-- Ignoring object responsibilities, which usually leads to god classes.
+- **Concurrent modification**: If a collection is modified (items added or deleted) while an iterator is actively traversing it, most iterators will break or behave unpredictably unless explicitly designed to be fail-safe (e.g., throwing a `ConcurrentModificationException`).
+- **Over engineering**: Almost all modern languages include built-in iterators and language support (like `for..of` loops, the `IEnumerable` interface in C#, or the `__iter__` method in Python). You rarely need to write your own `Iterator` interface from scratch unless you are traversing a highly custom, complex data structure in a weird way.

@@ -1,64 +1,172 @@
 ## Concept
 
-Fix algorithm structure while subclasses fill variable steps. Keep the implementation minimal, but the boundaries explicit.
+The **Template Method** is a behavioral design pattern that defines the skeleton of an algorithm in the superclass but lets subclasses override specific steps of the algorithm without changing its overall structure.
+
+Think of it like building a custom house. The construction company provides a standard template: build foundation, frame walls, add roof. But the *homeowner* decides the type of brick, the color of the walls, and the shingles on the roof.
 
 ## When to use
 
-- When you want a clear separation of concerns in object interactions.
-- When interview discussions require trade-offs, not just syntax.
-- When you need an example that maps quickly to production design decisions.
+- When you want to let clients extend only particular steps of an algorithm, but not the whole algorithm or its structure.
+- When you have several classes that contain almost identical algorithms with some minor differences. As a result, you might need to modify all classes when the algorithm changes.
 
 ## Diagram
 
 <MermaidDiagram chart={`classDiagram
-  class TemplateMethodContext {
-    +execute(): void
+  class DataMiner {
+    <<abstract>>
+    +mineProfile()
+    -openFile()
+    ~extractData()
+    ~parseData()
+    -closeFile()
   }
-  class TemplateMethodImplementation {
-    +execute(): void
+  
+  class PDFDataMiner {
+    ~extractData()
+    ~parseData()
   }
-  TemplateMethodContext --> TemplateMethodImplementation`} />
+  
+  class CSVDataMiner {
+    ~extractData()
+    ~parseData()
+  }
+  
+  DataMiner <|-- PDFDataMiner
+  DataMiner <|-- CSVDataMiner
+  
+  note for DataMiner "1. openFile()\n2. extractData()\n3. parseData()\n4. closeFile()"`} />
 
 ## Code
 
 <CodeBlock
-  typescript={`interface TemplateMethod {
-  execute(input: string): string;
+  typescript={`// 1. The Abstract Class defines the Template Method
+abstract class DataMiner {
+  // The Template Method: Final/frozen skeleton of the algorithm
+  // In TS/JS we can't easily prevent overrides, but we document it.
+  public mineProfile(path: string): void {
+    console.log(\`\\n--- Mining \${path} ---\`);
+    const file = this.openFile(path);
+    const rawData = this.extractData(file);
+    const parsed = this.parseData(rawData);
+    this.analyzeData(parsed);
+    this.closeFile(file);
+  }
+
+  // Standard implementations (cannot/should not be overridden)
+  private openFile(path: string): string { return \`[File Stream: \${path}]\`; }
+  private closeFile(file: string): void { console.log("Closing file stream."); }
+  private analyzeData(data: string): void { console.log("Analyzing format-agnostic data..."); }
+
+  // Abstract steps (MUST be implemented by subclasses)
+  protected abstract extractData(file: string): string;
+  protected abstract parseData(rawData: string): string;
 }
 
-class TemplateMethodImpl implements TemplateMethod {
-  execute(input: string): string {
-    return input.trim();
+// 2. Concrete Classes implement the custom steps
+class PDFDataMiner extends DataMiner {
+  protected extractData(file: string): string {
+    console.log("Extracting text blocks from PDF...");
+    return "PDF_RAW_BYTES";
+  }
+
+  protected parseData(rawData: string): string {
+    console.log("Parsing PDF structure into standard JSON format...");
+    return "{ data: 'pdf_parsed' }";
   }
 }
 
-const demo: TemplateMethod = new TemplateMethodImpl();
-console.log(demo.execute('sample'));`}
-  java={`interface TemplateMethod {
-  String execute(String input);
-}
+class CSVDataMiner extends DataMiner {
+  protected extractData(file: string): string {
+    console.log("Extracting rows from CSV...");
+    return "CSV_RAW_ROWS";
+  }
 
-class TemplateMethodImpl implements TemplateMethod {
-  public String execute(String input) {
-    return input.trim();
+  protected parseData(rawData: string): string {
+    console.log("Parsing CSV commas into standard JSON format...");
+    return "{ data: 'csv_parsed' }";
   }
 }
 
-TemplateMethod demo = new TemplateMethodImpl();
-System.out.println(demo.execute("sample"));`}
-  python={`class TemplateMethod:
-    def execute(self, input: str) -> str:
-        raise NotImplementedError
+// 3. Client Code
+const pdfMiner = new PDFDataMiner();
+pdfMiner.mineProfile("/docs/report.pdf");
 
-class TemplateMethodImpl(TemplateMethod):
-    def execute(self, input: str) -> str:
-        return input.strip()
+const csvMiner = new CSVDataMiner();
+csvMiner.mineProfile("/docs/users.csv");`}
+  java={`abstract class DataMiner {
+  // The Template Method (marked 'final' so it can't be overridden)
+  public final void mineProfile(String path) {
+    String file = openFile(path);
+    String rawData = extractData(file);
+    String parsed = parseData(rawData);
+    analyzeData(parsed);
+    closeFile(file);
+  }
 
-demo: TemplateMethod = TemplateMethodImpl()
-print(demo.execute("sample"))`}
+  private String openFile(String path) { return "[File Stream]"; }
+  private void closeFile(String file) { System.out.println("Closed file."); }
+  private void analyzeData(String data) { System.out.println("Analyzing..."); }
+
+  // Steps to be implemented by children
+  protected abstract String extractData(String file);
+  protected abstract String parseData(String rawData);
+}
+
+class PDFDataMiner extends DataMiner {
+  @Override
+  protected String extractData(String file) {
+    System.out.println("Extracting from PDF");
+    return "PDF_BYTES";
+  }
+  @Override
+  protected String parseData(String rawData) {
+    System.out.println("Parsing PDF");
+    return "PARSED";
+  }
+}
+
+public class Main {
+  public static void main(String[] args) {
+    DataMiner miner = new PDFDataMiner();
+    miner.mineProfile("report.pdf");
+  }
+}`}
+  python={`from abc import ABC, abstractmethod
+
+class DataMiner(ABC):
+    # The Template Method
+    def mine_profile(self, path: str) -> None:
+        file = self._open_file(path)
+        raw_data = self._extract_data(file)
+        parsed = self._parse_data(raw_data)
+        self._analyze_data(parsed)
+        self._close_file(file)
+
+    def _open_file(self, path: str) -> str: return f"[File Stream: {path}]"
+    def _close_file(self, file: str) -> None: print("Closed file stream")
+    def _analyze_data(self, data: str) -> None: print("Analyzing data...")
+
+    @abstractmethod
+    def _extract_data(self, file: str) -> str: pass
+    
+    @abstractmethod
+    def _parse_data(self, raw_data: str) -> str: pass
+
+class PDFDataMiner(DataMiner):
+    def _extract_data(self, file: str) -> str:
+        print("Extracting from PDF")
+        return "PDF_BYTES"
+
+    def _parse_data(self, raw_data: str) -> str:
+        print("Parsing PDF")
+        return "PARSED"
+
+miner = PDFDataMiner()
+miner.mine_profile("report.pdf")`}
 />
 
 ## Gotchas
 
-- Copying the pattern mechanically without checking the problem constraints.
-- Ignoring object responsibilities, which usually leads to god classes.
+- **Breaking Liskov Substitution**: You might accidentally violate the Liskov Substitution Principle by suppressing a default step implementation via a subclass.
+- **Rigid Skeleton**: Template methods tend to be harder to maintain the more steps they have.
+- **Hollywood Principle**: "Don't call us, we'll call you." The superclass controls the workflow and calls the subclass methods, rather than the subclass calling superclass methods.

@@ -1,64 +1,211 @@
 ## Concept
 
-Represent requests as objects for queueing, logging, and undo. Keep the implementation minimal, but the boundaries explicit.
+The **Command** is a behavioral design pattern that turns a request into a stand-alone object that contains all information about the request.
+
+This transformation lets you pass requests as a method argument, delay or queue a request's execution, and support undoable operations.
 
 ## When to use
 
-- When you want a clear separation of concerns in object interactions.
-- When interview discussions require trade-offs, not just syntax.
-- When you need an example that maps quickly to production design decisions.
+- When you want to parameterize objects with operations (e.g., configuring GUI buttons to execute different actions depending on the context).
+- When you want to queue operations, schedule their execution, or execute them remotely.
+- When you want to implement reversible operations (Undo/Redo). You keep a history of executed command objects and call an `undo()` method on them.
 
 ## Diagram
 
 <MermaidDiagram chart={`classDiagram
-  class CommandContext {
-    +execute(): void
+  class Invoker {
+    -Command command
+    +setCommand(Command)
+    +executeCommand()
   }
-  class CommandImplementation {
-    +execute(): void
+  
+  class Command {
+    <<interface>>
+    +execute()
   }
-  CommandContext --> CommandImplementation`} />
+  
+  class LightOnCommand {
+    -Light light
+    +execute()
+  }
+  
+  class LightOffCommand {
+    -Light light
+    +execute()
+  }
+  
+  class Light {
+    +turnOn()
+    +turnOff()
+  }
+  
+  Invoker o-- Command : "Stores"
+  Command <|.. LightOnCommand
+  Command <|.. LightOffCommand
+  LightOnCommand --> Light : "Receiver"
+  LightOffCommand --> Light : "Receiver"`} />
 
 ## Code
 
 <CodeBlock
-  typescript={`interface Command {
-  execute(input: string): string;
+  typescript={`// 1. The Receiver (The object doing the actual work)
+class Light {
+  turnOn(): void { console.log("Light is ON"); }
+  turnOff(): void { console.log("Light is OFF"); }
 }
 
-class CommandImpl implements Command {
-  execute(input: string): string {
-    return input.trim();
+// 2. The Command Interface
+interface Command {
+  execute(): void;
+  undo(): void;
+}
+
+// 3. Concrete Commands encapsulate requests and delegate to Receiver
+class LightOnCommand implements Command {
+  constructor(private light: Light) {}
+  
+  execute(): void { this.light.turnOn(); }
+  undo(): void { this.light.turnOff(); }
+}
+
+class LightOffCommand implements Command {
+  constructor(private light: Light) {}
+
+  execute(): void { this.light.turnOff(); }
+  undo(): void { this.light.turnOn(); }
+}
+
+// 4. The Invoker (Executes commands, can optionally keep history)
+class RemoteControl {
+  private commandHistory: Command[] = [];
+
+  executeCommand(command: Command): void {
+    command.execute();
+    this.commandHistory.push(command);
+  }
+
+  undoLastCommand(): void {
+    const last = this.commandHistory.pop();
+    if (last) {
+      console.log("Undoing last action...");
+      last.undo();
+    }
   }
 }
 
-const demo: Command = new CommandImpl();
-console.log(demo.execute('sample'));`}
-  java={`interface Command {
-  String execute(String input);
+// 5. Client Code
+const livingRoomLight = new Light();
+const remote = new RemoteControl();
+
+const turnOn = new LightOnCommand(livingRoomLight);
+const turnOff = new LightOffCommand(livingRoomLight);
+
+remote.executeCommand(turnOn);
+remote.executeCommand(turnOff);
+remote.undoLastCommand(); // Undoes the 'turnOff', turns light back ON`}
+  java={`// Receiver
+class Light {
+  public void turnOn() { System.out.println("Light ON"); }
+  public void turnOff() { System.out.println("Light OFF"); }
 }
 
-class CommandImpl implements Command {
-  public String execute(String input) {
-    return input.trim();
+interface Command {
+  void execute();
+  void undo();
+}
+
+// Concrete Commands
+class LightOnCommand implements Command {
+  private Light light;
+  public LightOnCommand(Light light) { this.light = light; }
+  
+  public void execute() { light.turnOn(); }
+  public void undo() { light.turnOff(); }
+}
+
+class LightOffCommand implements Command {
+  private Light light;
+  public LightOffCommand(Light light) { this.light = light; }
+  
+  public void execute() { light.turnOff(); }
+  public void undo() { light.turnOn(); }
+}
+
+// Invoker
+import java.util.Stack;
+class RemoteControl {
+  private Stack<Command> history = new Stack<>();
+  
+  public void submit(Command c) {
+    c.execute();
+    history.push(c);
+  }
+  
+  public void undo() {
+    if (!history.isEmpty()) {
+      history.pop().undo();
+    }
   }
 }
 
-Command demo = new CommandImpl();
-System.out.println(demo.execute("sample"));`}
-  python={`class Command:
-    def execute(self, input: str) -> str:
-        raise NotImplementedError
+public class Main {
+  public static void main(String[] args) {
+    Light light = new Light();
+    RemoteControl remote = new RemoteControl();
+    
+    remote.submit(new LightOnCommand(light));
+    remote.submit(new LightOffCommand(light));
+    remote.undo();
+  }
+}`}
+  python={`from abc import ABC, abstractmethod
 
-class CommandImpl(Command):
-    def execute(self, input: str) -> str:
-        return input.strip()
+# Receiver
+class Light:
+    def turn_on(self): print("Light is ON")
+    def turn_off(self): print("Light is OFF")
 
-demo: Command = CommandImpl()
-print(demo.execute("sample"))`}
+# Command Interface
+class Command(ABC):
+    @abstractmethod
+    def execute(self) -> None: pass
+    @abstractmethod
+    def undo(self) -> None: pass
+
+# Concrete Commands
+class LightOnCommand(Command):
+    def __init__(self, light: Light): self.light = light
+    def execute(self) -> None: self.light.turn_on()
+    def undo(self) -> None: self.light.turn_off()
+
+class LightOffCommand(Command):
+    def __init__(self, light: Light): self.light = light
+    def execute(self) -> None: self.light.turn_off()
+    def undo(self) -> None: self.light.turn_on()
+
+# Invoker
+class RemoteControl:
+    def __init__(self):
+        self.history = []
+
+    def submit(self, command: Command):
+        command.execute()
+        self.history.append(command)
+
+    def undo(self):
+        if self.history:
+            self.history.pop().undo()
+
+# Client Code
+light = Light()
+remote = RemoteControl()
+
+remote.submit(LightOnCommand(light))
+remote.submit(LightOffCommand(light))
+remote.undo()`}
 />
 
 ## Gotchas
 
-- Copying the pattern mechanically without checking the problem constraints.
-- Ignoring object responsibilities, which usually leads to god classes.
+- **Too many classes**: Every single unique action requires creating a brand new Command subclass. If you have hundreds of actions in a GUI, you'll have hundreds of classes.
+- **Command vs Strategy**: Both encapsulate a behavior, but their intents differ. Command encapsulates a specific *request* with all its parameters (e.g., "Delete File X"). Strategy encapsulates an *algorithm* to solve a problem (e.g., "Sort using MergeSort" or "Sort using QuickSort").

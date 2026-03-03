@@ -1,64 +1,176 @@
 ## Concept
 
-Swap algorithms at runtime through a stable strategy interface. Keep the implementation minimal, but the boundaries explicit.
+The **Strategy** is a behavioral design pattern that lets you define a family of algorithms, put each of them into a separate class, and make their objects interchangeable.
+
+It allows the algorithm (the strategy) to vary independently from the clients that use it. Wait, doesn't that sound like Polymorphism? Yes! Strategy is basically the textbook application of Polymorphism and Composition.
 
 ## When to use
 
-- When you want a clear separation of concerns in object interactions.
-- When interview discussions require trade-offs, not just syntax.
-- When you need an example that maps quickly to production design decisions.
+- When you want to use different variants of an algorithm within an object and be able to switch from one algorithm to another during runtime.
+- When you have a lot of similar classes that only differ in the way they execute some behavior. Just extract that behavior into a Strategy.
+- To isolate the business logic of a class from the implementation details of algorithms that may not be that important in the context of that logic.
 
 ## Diagram
 
 <MermaidDiagram chart={`classDiagram
-  class StrategyContext {
-    +execute(): void
+  class NavigationApp {
+    -RouteStrategy routeStrategy
+    +setStrategy(RouteStrategy)
+    +buildRoute(A, B)
   }
-  class StrategyImplementation {
-    +execute(): void
+  
+  class RouteStrategy {
+    <<interface>>
+    +buildRoute(A, B)
   }
-  StrategyContext --> StrategyImplementation`} />
+  
+  class DrivingStrategy {
+    +buildRoute(A, B)
+  }
+  
+  class WalkingStrategy {
+    +buildRoute(A, B)
+  }
+  
+  class PublicTransitStrategy {
+    +buildRoute(A, B)
+  }
+  
+  NavigationApp o-- RouteStrategy : "Delegates"
+  RouteStrategy <|.. DrivingStrategy
+  RouteStrategy <|.. WalkingStrategy
+  RouteStrategy <|.. PublicTransitStrategy`} />
 
 ## Code
 
 <CodeBlock
-  typescript={`interface Strategy {
-  execute(input: string): string;
+  typescript={`// 1. The Strategy Interface
+interface RouteStrategy {
+  buildRoute(start: string, end: string): void;
 }
 
-class StrategyImpl implements Strategy {
-  execute(input: string): string {
-    return input.trim();
+// 2. Concrete Strategies
+class DrivingStrategy implements RouteStrategy {
+  buildRoute(start: string, end: string): void {
+    console.log(\`Driving from \${start} to \${end} via Highways. ETA: 20m\`);
   }
 }
 
-const demo: Strategy = new StrategyImpl();
-console.log(demo.execute('sample'));`}
-  java={`interface Strategy {
-  String execute(String input);
-}
-
-class StrategyImpl implements Strategy {
-  public String execute(String input) {
-    return input.trim();
+class WalkingStrategy implements RouteStrategy {
+  buildRoute(start: string, end: string): void {
+    console.log(\`Walking from \${start} to \${end} via Park Trails. ETA: 1h 10m\`);
   }
 }
 
-Strategy demo = new StrategyImpl();
-System.out.println(demo.execute("sample"));`}
-  python={`class Strategy:
-    def execute(self, input: str) -> str:
-        raise NotImplementedError
+class TransitStrategy implements RouteStrategy {
+  buildRoute(start: string, end: string): void {
+    console.log(\`Taking Bus 42 from \${start} to \${end}. ETA: 45m\`);
+  }
+}
 
-class StrategyImpl(Strategy):
-    def execute(self, input: str) -> str:
-        return input.strip()
+// 3. The Context (Maintains a reference to a Strategy)
+class NavigationApp {
+  private strategy: RouteStrategy;
 
-demo: Strategy = StrategyImpl()
-print(demo.execute("sample"))`}
+  // The strategy can be injected or set later
+  constructor(strategy: RouteStrategy) {
+    this.strategy = strategy;
+  }
+
+  setStrategy(strategy: RouteStrategy): void {
+    console.log("--- Switched Routing Strategy ---");
+    this.strategy = strategy;
+  }
+
+  // The context delegates the heavy lifting to the strategy object
+  executeRoute(start: string, end: string): void {
+    this.strategy.buildRoute(start, end);
+  }
+}
+
+// 4. Client Code
+const app = new NavigationApp(new DrivingStrategy());
+app.executeRoute("Home", "Office"); 
+// Oh, traffic is bad! Let's take the bus instead.
+app.setStrategy(new TransitStrategy());
+app.executeRoute("Home", "Office");`}
+  java={`interface RouteStrategy {
+  void buildRoute(String start, String end);
+}
+
+class DrivingStrategy implements RouteStrategy {
+  public void buildRoute(String start, String end) {
+    System.out.println("Driving from " + start + " to " + end);
+  }
+}
+
+class TransitStrategy implements RouteStrategy {
+  public void buildRoute(String start, String end) {
+    System.out.println("Taking Bus from " + start + " to " + end);
+  }
+}
+
+class NavigationApp {
+  private RouteStrategy strategy;
+
+  public NavigationApp(RouteStrategy strategy) {
+    this.strategy = strategy;
+  }
+
+  public void setStrategy(RouteStrategy strategy) {
+    this.strategy = strategy;
+  }
+
+  public void executeRoute(String start, String end) {
+    strategy.buildRoute(start, end);
+  }
+}
+
+public class Main {
+  public static void main(String[] args) {
+    NavigationApp app = new NavigationApp(new DrivingStrategy());
+    app.executeRoute("A", "B");
+    
+    app.setStrategy(new TransitStrategy());
+    app.executeRoute("A", "B");
+  }
+}`}
+  python={`from abc import ABC, abstractmethod
+
+# Interface
+class RouteStrategy(ABC):
+    @abstractmethod
+    def build_route(self, start: str, end: str) -> None: pass
+
+# Concrete Strategies
+class DrivingStrategy(RouteStrategy):
+    def build_route(self, start: str, end: str) -> None:
+        print(f"Driving from {start} to {end}")
+
+class TransitStrategy(RouteStrategy):
+    def build_route(self, start: str, end: str) -> None:
+        print(f"Taking bus from {start} to {end}")
+
+# Context
+class NavigationApp:
+    def __init__(self, strategy: RouteStrategy):
+        self._strategy = strategy
+
+    def set_strategy(self, strategy: RouteStrategy) -> None:
+        self._strategy = strategy
+
+    def execute_route(self, start: str, end: str) -> None:
+        self._strategy.build_route(start, end)
+
+# Client Code
+app = NavigationApp(DrivingStrategy())
+app.execute_route("Home", "Work")
+
+app.set_strategy(TransitStrategy())
+app.execute_route("Home", "Work")`}
 />
 
 ## Gotchas
 
-- Copying the pattern mechanically without checking the problem constraints.
-- Ignoring object responsibilities, which usually leads to god classes.
+- **Strategy vs State**: As mentioned in the State pattern, they share the same structure. However, in Strategy, the *client* dictates which strategy the context uses. In State, the states themselves cause the context to shift from one state to another.
+- **Anonymous functions**: In modern languages with Functional Programming support (like JS/TS, Python, or Java 8+), you don't necessarily need to create distinct classes for Strategies. You can just pass an anonymous function (`lambda` or `arrow function`) representing the strategy logic directly into the context!
